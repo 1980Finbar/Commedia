@@ -344,16 +344,17 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
 .howto-go { position: sticky; bottom: 0; margin: 14px -18px -18px; padding: 10px 18px 14px; align-items: center; background: var(--sheet); border-top: 1px solid var(--line); border-radius: 0 0 14px 14px; }   /* the way out stays in view, however long the sheet is on a small screen */
 .hw-box { fill: none; stroke: var(--ink); stroke-width: 2; } .hw-box.on { fill: var(--ink); } .hw-box.over { stroke: var(--bad); } .hw-skull { fill: var(--bad); font: 700 13px var(--ui); text-anchor: middle; }
 /* what each way costs, at every stop: a row for every walk under the maze (its steps, what it stops at, what it costs, and how it leaves you for the exit) */
-.ways { margin: 8px 0 0; }
+.ways { margin: 6px 0 0; }
 .ways[hidden] { display: none; }
-.ways-h { margin: 0; font: 700 16px/1.3 var(--book); color: var(--ink); }
-.ways-clock { margin: 0 0 5px; font-size: 13px; line-height: 1.35; color: var(--muted); }
-.ways-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
-.way { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1px 8px; width: 100%; padding: 6px 10px; text-align: left; font-size: 14px; line-height: 1.3; border-radius: 10px; }
+.ways-h { margin: 0; font: 700 16px/1.25 var(--book); color: var(--ink); }
+.ways-clock { margin: 0 0 4px; font-size: 12.5px; line-height: 1.3; color: var(--muted); }
+.ways-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+.way { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1px 8px; width: 100%; padding: 4px 10px; text-align: left; font-size: 13.5px; line-height: 1.3; border-radius: 10px; }
 .way .wn { flex: 0 0 auto; display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 3px; border: 2px solid var(--ov); border-radius: 12px; background: color-mix(in srgb, var(--ov) 14%, var(--paper)); font: 800 12px var(--ui); font-variant-numeric: tabular-nums; align-self: center; }
 .way.fight .wn { border-color: var(--bad); background: var(--sheet); } .way.fall .wn { border-color: var(--gold); background: none; border-width: 3px; } .way .wn:empty { display: none; }
 .way .wt { flex: 1 1 auto; min-width: 0; }
-.way .wx { flex: 0 0 auto; margin-left: auto; text-align: right; color: var(--muted); font-size: 13px; white-space: nowrap; }
+.way .wx { flex: 1 1 100%; margin-left: 0; text-align: left; color: var(--muted); font-size: 12px; line-height: 1.25; }
+.way.tone-bad .wx { color: var(--bad); font-weight: 600; }
 .way.picked { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
 /* the status line keeps its old look on a wide screen (its three parts sit in the one wrapping row); the Steps part and the skull clock are for the narrow layout below, where the step track is further down the page */
 .status-line { display: contents; }
@@ -364,21 +365,21 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
 @media (max-width: 1239px) {
   #game:not([hidden]) { display: flex; flex-direction: column; padding-top: 6px; }
   #cols, #col-side, #col-side.ended, #col-board, #pagehead { display: contents; }
-  .status { order: -2; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1px 14px; margin: 0 0 4px; padding: 3px 0 2px; background: var(--sheet); border-bottom: 1px solid var(--line); }
+  .status { order: -2; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1px 14px; margin: 0 0 3px; padding: 3px 0 2px; background: var(--sheet); border-bottom: 1px solid var(--line); }
   .status .stat { min-width: 0; } .stat .l { line-height: 1.2; } .stat .l b { font-size: 16px; } .bar { height: 5px; margin-top: 1px; } .status .small-stat { line-height: 1.25; }
   .status-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 14px; grid-column: 1 / -1; }
   .steps-stat { display: inline; } .steps-stat b { color: var(--text); font-size: 16px; font-variant-numeric: tabular-nums; }
   .skull-line { white-space: nowrap; color: var(--muted); } .skull-line.near { color: var(--bad); font-weight: 700; }
   #leave { order: -1; }
   #notice { order: 0; font-size: 13px; line-height: 1.35; padding: 5px 9px; margin: 0 0 4px; }
-  #page-title { order: 1; font-size: 16px; margin: 2px 0 0; }
+  #page-title { order: 1; font-size: 16px; margin: 1px 0 0; }
   #page-chips { order: 1; margin: 3px 0 0; gap: 3px; } .chips .chip2.rule { order: 2; }
-  .board-wrap { order: 2; margin: 4px -6px 0; }
+  .board-wrap { order: 2; margin: 3px -6px 0; }
   #board { max-height: max(240px, calc(100vh - 360px)); max-height: max(240px, calc(100svh - 360px)); }
   #ways { order: 3; }
   #hint { order: 3; margin: 4px 0 0; font-size: 14px; line-height: 1.4; } #hint:empty { display: none; }
   #prompt { order: 3; margin: 8px 0 0; }
-  .hand-row { order: 4; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; margin: 8px 0 2px; }
+  .hand-row { order: 4; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; margin: 6px 0 2px; }
   .hand-row .lab { margin: 0; } #hand { grid-column: 1 / -1; } #hand-n { grid-column: 2; grid-row: 1; margin: 0; }
   #new { order: 5; margin: 8px 0 0; font-size: 15px; line-height: 1.4; padding: 8px 12px; }
   #foes-strip { order: 6; }
@@ -534,7 +535,7 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
     <p class="example-h"><b>One fight, step by step</b></p>
     <ol id="card-fight-example" class="example"></ol>
     <p id="card-fight-after"></p>
-    <p><b>The details.</b> Move into an enemy: fight, or pay 4 Energy to let it pass. Pay before it flips its first card; you can never pay a shortfall in Health, so without 4 Energy you fight or walk round. Its total starts at the page’s number; it flips number cards one at a time. After each, if it is above you (hand cards you have played, plus strength, plus 1 if you started from the dark), add hand cards until you are level, or stop: you lose and take its damage. Level after its last card is a win: you draw back up to 5 (an elite also gives its two highest cards, and your lowest goes if you hold more than 5). The cards you played are replaced from the pile, so your hand is full again but not always stronger. After a loss its total is known: fight again with cards that beat it, pay 4 Energy, or walk round. Against a boss who fights you may always swing blind instead of committing cards: the top number card counts for you. Some bosses allow an Energy flip; see the boss list.</p>
+    <p><b>The details.</b> Move into an enemy: fight, or pay 4 Energy to let it pass. Pay before it flips its first card; you can never pay a shortfall in Health, so without 4 Energy you fight or walk round. Its total starts at the page’s number; it flips number cards one at a time. After each, if it is above you (hand cards you have played, plus strength, plus 1 if you started from the dark), add hand cards until you are level, or stop: you lose and take its damage. Level after its last card is a win: you draw back up to 5 (an elite also gives its two highest cards, and your lowest goes if you hold more than 5). The cards you played are replaced from the pile, so your hand is full again but not always stronger. After a loss its total is known: fight again with cards that beat it, pay 4 Energy, or walk round. The cards you played in a lost fight are gone, and nothing is drawn back until you win a fight or reach a new page. Against a boss who fights you may always swing blind instead of committing cards: the top number card counts for you. Some bosses allow an Energy flip; see the boss list.</p>
     <h3>The bosses</h3>
     <ul id="card-bosses"></ul>
     <h3>Chapter 1, Inferno: the circles and their terrain</h3>
@@ -3988,11 +3989,11 @@ function renderTop() {
   for (let i = 1; i <= end; i++) { const b = document.createElement('span'); const skull = i > A && (i - A) % k === 0; b.className = 'tick' + (i <= used ? ' on' : '') + (i > A ? ' over' : '') + (skull ? ' skull' : '') + (i === A ? ' line' : ''); if (skull) b.textContent = '☠'; box.appendChild(b); }
   const left = A - used, next = A + k * (Math.floor(Math.max(0, used - A) / k) + 1) - used, pl = n => n + ' step' + (n === 1 ? '' : 's');
   const t = document.createElement('small'); t.className = !fl.clockStopped && left <= k ? 'near' : '';   // the clock is said from the first step, and shouts in the last few before the skulls
-  t.textContent = fl.clockStopped ? 'the step clock has stopped: the boss is the last thing on this page' : used + ' of ' + A + (left > 0 ? ': ' + pl(left) + ' left, then every ' + k + 'th step is a skull (−1 Health)' : ': past it, every ' + k + 'th step is a skull (−1 Health), the next in ' + pl(next)); box.appendChild(t);
+  t.textContent = fl.clockStopped ? 'the step clock has stopped: the boss is the last thing on this page' : used + ' of ' + A + (left > 0 ? ': ' + pl(left) + ' left, then every ' + k + 'th step is a skull (−1 Health), the first on step ' + (A + k) : ': past it, every ' + k + 'th step is a skull (−1 Health), the next on step ' + (used + next)); box.appendChild(t);
   // the same clock in the status bar (a narrow screen keeps it in view): the steps used, and the skull coming up: −1 Health, in so many steps
   $('#steps-used').textContent = used; $('#steps-max').textContent = '/ ' + A;
-  const sk = $('#steps-skull'); sk.textContent = fl.clockStopped ? '(clock stopped)' : '\u2620 \u22121 in ' + next; sk.className = 'skull-line' + (!fl.clockStopped && left <= k ? ' near' : '');
-  $('#steps-stat').title = fl.clockStopped ? 'The step clock has stopped: the boss is the last thing on this page.' : 'Steps used on this page, of ' + A + '. The next skull (−1 Health) comes in ' + pl(next) + ', then every ' + k + 'th step.';
+  const sk = $('#steps-skull'); sk.textContent = fl.clockStopped ? '(clock stopped)' : '\u2620 on step ' + (used + next); sk.className = 'skull-line' + (!fl.clockStopped && left <= k ? ' near' : '');
+  $('#steps-stat').title = fl.clockStopped ? 'The step clock has stopped: the boss is the last thing on this page.' : 'Steps used on this page, of ' + A + '. The next skull (−1 Health) is on step ' + (used + next) + ': ' + (next > 1 ? pl(next - 1) + ' more are safe' : 'the next step is a skull') + ', then every ' + k + 'th step.';
 }
 // Saint Peter's tally beside your numbers, on every Paradise page (the door you take and what you do on his page are decisions about it); nothing when there is no exam or the page is not in Paradise
 function renderExam() {
@@ -4057,7 +4058,7 @@ function tipsClear() { tipsMem = {}; try { localStorage.removeItem(TKEY); } catc
 const fightFoe = () => { const fl = G.floor, p = G.pending, at = G.fight ? G.fight.at : p && (p.id === 'foe' || p.id === 'again') ? p.data.at : undefined; return at === undefined ? null : fl.enemies[at] || null; };
 function fightNews() {
   const e = fightFoe(), s = D.foeSpec(G, e && e.kind !== 'boss' ? e : { kind: 'foe', card: { rank: 'J' } }), pass = D.passCost(G);
-  return 'How a fight works. The enemy starts at ' + s.start + (s.die ? ' plus a die roll' : '') + ' and flips ' + nCards(s.k, 'face-down card') + ' one at a time; each adds its number to its total. Your total is your strength (' + D.fightBase(G) + ') plus the hand cards you play. Whenever the enemy is above you, play hand cards until you are level with it, or stop and take ' + s.blows + ' damage. Level after its last card: you win, and your hand fills back up to ' + D.handMax(G) + '. Before it flips anything you can pay ' + pass + ' Energy to let it pass' + (G.energy >= pass ? '.' : ' (you have only ' + G.energy + ' Energy now).');
+  return 'How a fight works. The enemy has a number: it starts at ' + s.start + (s.die ? ' plus a die roll' : '') + ' and flips ' + nCards(s.k, 'hidden card') + (s.k > 1 ? ', one at a time; each adds its number.' : ', which adds its number.') + ' You have a number too: your strength (' + D.fightBase(G) + '), plus every hand card you play. Whenever the enemy is above you, play hand cards to catch up, or stop: you lose the fight, take ' + s.blows + ' damage, and the cards you played are gone. When its last card is flipped and you are at least as high as it, you win, and your hand fills back up to ' + D.handMax(G) + '. Or pay ' + pass + ' Energy to let it pass' + (G.energy >= pass ? '' : ' (you have only ' + G.energy + ' Energy now)') + ', or choose a walk that goes round it.';
 }
 function renderNew() {
   const fl = G.floor, have = new Set(['trail', 'steps']);
@@ -4124,15 +4125,15 @@ function fightLead(F, opts) {
   return 'You are ' + F.short + ' short. ' + (reach ? 'Play hand cards worth at least ' + F.short + (F.boss ? ' to win the round, or stop and lose it.' : ' to stay in the fight, or stop.') + (F.boss || !F.left ? '' : ' It then flips ' + (F.left > 1 ? 'its next card' : 'its last card') + '.') : 'Your hand cannot reach it, so you can only stop.');
 }
 // the line under a button: what it does and what happens next
-function fightCaption(F, o) {
-  const Obj = F.boss ? 'him' : 'it';
+function fightCaption(F, o) {   // the line under a button: what it does and what happens next
+  const Obj = F.boss ? 'him' : 'it', lost = F.played.length ? ' and lose the ' + (F.played.length === 1 ? 'card' : F.played.length + ' cards') + ' you played (a loss draws nothing back)' : '';
   switch (o.act) {
-    case 'fight': return 'It flips ' + nCards(F.k) + (F.k > 1 ? ', one at a time' : '') + '. Keep level with it using hand cards, or stop and lose. Level after its last card: you win.';
-    case 'pass': return 'Pay ' + F.pass + ' Energy and step past it: no fight, no damage.';
+    case 'fight': return 'Start the fight' + (F.spec.die ? '.' : F.short > 0 ? ': you play hand cards first.' : ': it flips its first card.') + ' A win draws your hand back up to ' + F.hand + '.';
+    case 'pass': return 'Pay ' + F.pass + ' Energy to slip past it: no fight and no damage. You walk on' + (F.e.keeper ? ', through the hole' : ', onto its square') + '.';
     case 'add': { const sum = rankSum(o.cards), after = F.mine + sum, over = after - F.its; return 'You would have ' + after + ': ' + (over ? over + ' above ' + Obj : 'level') + (F.boss ? ', so you win the round.' : F.left ? '.' : ', and it has no cards left: you win.'); }
-    case 'stop': return F.boss ? 'You lose the round and take ' + F.blows + ' damage.' : 'You lose and take ' + F.blows + ' damage. Its other cards turn over, so you see its total: then fight again, pay ' + F.pass + ' Energy or walk round it.';
+    case 'stop': return F.boss ? 'Lose the round: take ' + F.blows + ' damage' + lost + '.' : 'Stop and lose this fight: take ' + F.blows + ' damage' + lost + (F.left > 0 ? '. All its hidden cards are turned over, so you see its total' : '') + '. Then you can fight it again with cards that beat it, pay ' + F.pass + ' Energy, or walk round it.';
     case 'cover': return (F.base + rankSum(o.cards)) + ' against ' + F.its + ': you win and step onto its square.';
-    case 'leave': return 'Walk round it. It stays here, and its total stays known.';
+    case 'leave': return 'Walk round it instead: it stays where it is, and you lose no Energy or Health.';
   }
   return '';
 }
@@ -4212,7 +4213,7 @@ function fightExample() {
 }
 function fightCardLead() {
   const C = D.CONFIG, F = C.fight, c1 = D.book().pages[D.circleKey(1)].dials.base, c9 = D.book().pages[D.circleKey(C.circles)].dials.base, damage = [...new Set([F.blows.J, F.blows.Q, F.blows.K])].sort((a, b) => a - b);
-  return 'An enemy is a number that grows. It starts at its page’s number (' + c1 + ' on the first circle, ' + c9 + ' on the last) and flips face-down number cards one at a time: a jack flips ' + nCards(F.cards.J) + ', a queen ' + F.cards.Q + ', a king ' + F.cards.K + '. Each card adds its number to the enemy. Your number is your strength plus the hand cards you play. Whenever the enemy is above you, play hand cards until you are level with it, or stop and take its damage (' + damage.join(' or ') + '). If you are level after its last card you win, and your hand fills back up to ' + C.start.hand + '. Before it flips anything you may pay ' + D.passCost(null) + ' Energy to let it pass.';
+  return 'An enemy is a number that grows. It starts at its page’s number (' + c1 + ' on the first circle, ' + c9 + ' on the last) and flips face-down number cards one at a time: a jack flips ' + nCards(F.cards.J) + ', a queen ' + F.cards.Q + ', a king ' + F.cards.K + '. Each card adds its number to the enemy. Your number is your strength plus the hand cards you play. Whenever the enemy is above you, play hand cards until you are level with it, or stop: you lose the fight, take its damage (' + damage.join(' or ') + ') and the cards you played are gone. If you are level after its last card you win, and your hand fills back up to ' + C.start.hand + '. Before it flips anything you may pay ' + D.passCost(null) + ' Energy to let it pass.';
 }
 function fillFightCard() {
   const lead = $('#card-fight-lead'), list = $('#card-fight-example'); if (!lead || !list) return;
@@ -4220,7 +4221,7 @@ function fillFightCard() {
   const X = fightExample(), li = t => { const n = document.createElement('li'); n.textContent = t; list.appendChild(n); };
   li('The setup. A queen waits on the first circle: it starts at ' + X.start + ' and flips ' + nCards(X.k) + '. You have strength ' + X.strength + ' and the hand ' + X.hand.join(', ') + '. You step into it and choose Fight it (the other choice is to pay ' + X.pass + ' Energy and let it pass).');
   X.steps.forEach(li);
-  const aft = $('#card-fight-after'); if (aft) aft.textContent = 'Had you stopped at any point instead of playing, you would have lost ' + X.blows + ' damage. Its other cards turn over, so you see its total, and you may fight it again with cards that beat it, pay ' + X.pass + ' Energy, or walk round it.';
+  const aft = $('#card-fight-after'); if (aft) aft.textContent = 'Had you stopped instead of playing, you would have lost the fight: ' + X.blows + ' damage, and the cards you had played would be gone (a loss draws nothing back). Its hidden cards turn over, so you see its total, and you may fight it again with cards that beat it, pay ' + X.pass + ' Energy, or walk round it.';
 }
 // the end of a chapter is a win of its own, said so before the blessing is chosen: what it gives, and what it opens in the Ledger (Hard after Inferno, Brutal after Purgatory) while that is still closed
 function clearedPanel() {
@@ -4368,12 +4369,14 @@ function drawTerrain(svg, fl, t, x, y) {
   if (t === 'bridge') { el('rect', { x: X + 2, y: Y + 4, width: CS - 4, height: CS - 8, class: 't-bridge' }, svg); for (const k of [0.33, 0.66]) el('line', { x1: X + k * CS, y1: Y + 5, x2: X + k * CS, y2: Y + CS - 5, class: 't-plank' }, svg); }
   if (t === 'mirage') el('circle', { cx, cy, r: CS * 0.36, class: 't-mirage' }, svg);
 }
-const ROOM_TEXT = { fountain: () => 'the fountain (+1 Health, and +3 Energy or a hand card)', bait: () => 'a Meal (+' + D.baitHeal(G) + ' Health)', light: () => 'a Flask (+' + D.CONFIG.rewards.light + ' Energy)', chest: () => 'a chest (+' + D.chestHeal(G) + ' Health, +' + D.CONFIG.rewards.chest[1] + ' Energy)', rest: () => 'a rest (+' + D.restHeal(G) + ' Health, for ' + D.CONFIG.rooms.restSteps + ' steps)', altar: () => 'an altar (Energy buys a hand card or +1 strength)' };
+const ROOM_TEXT = { fountain: () => 'the fountain (+1 Health, and your pick of +3 Energy or a hand card)', bait: () => 'a Meal (+' + D.baitHeal(G) + ' Health)', light: () => 'a Flask (+' + D.CONFIG.rewards.light + ' Energy)', chest: () => 'a chest (+' + D.chestHeal(G) + ' Health, +' + D.CONFIG.rewards.chest[1] + ' Energy)', rest: () => 'a rest (+' + D.restHeal(G) + ' Health, for ' + D.CONFIG.rooms.restSteps + ' steps)', altar: () => 'an altar (Energy buys a hand card or +1 strength)' };
 // where a walk leads, in plain words: the exit's distance from there, the steps that would be left, and a way that is fixed for a while (a spur: you cannot turn off it)
-function leadText(o) {
+function leadText(o) {   // where a walk leads, in plain words: the exit's distance from there, whether you would arrive with steps to spare or too many, what the skulls would cost, and a way that is fixed for a while
   const ex = D.exitInfo(G, o); if (!ex) return '';
-  const left = ex.left >= 0 ? ex.left + ' left of the allowance' : -ex.left + ' past the allowance';
-  return 'From there the exit is ' + ex.toExit + ' step' + (ex.toExit === 1 ? '' : 's') + ' on by the shortest way' + (G.floor.clockStopped ? ' (the step clock has stopped).' : ' (' + left + ' when you get there).') + (ex.fixed >= 3 ? ' The way is fixed for ' + ex.fixed + ' steps: you cannot turn off it.' : '');
+  const fl = G.floor, A = D.allowance(G), k = D.CONFIG.steps.skull, used = fl.steps, on = ex.toExit + ' step' + (ex.toExit === 1 ? '' : 's'), fixed = ex.fixed >= 3 ? ' The way is fixed for ' + ex.fixed + ' steps: you cannot turn off it.' : '';
+  if (fl.clockStopped) return 'From there the exit is ' + on + ' on by the shortest way (the step clock has stopped).' + fixed;
+  const sk = (from, to) => Math.floor(Math.max(0, to - A) / k) - Math.floor(Math.max(0, from - A) / k), ahead = sk(used, A - ex.left), over = Math.max(0, -ex.left), paid = Math.floor(Math.max(0, used - A) / k) > 0;
+  return 'From there the exit is ' + on + ' on by the shortest way: ' + (ex.left >= 0 ? 'you would have ' + (ex.left === 0 ? 'no steps' : stepsText(ex.left)) + ' to spare: no skull.' : 'you would be ' + stepsText(over) + ' over the allowance, ' + (ahead > 0 ? 'which costs ' + skullsText(ahead) + '.' : paid ? 'but that adds no new skull.' : 'but the first ' + (k - 1) + ' steps over are free: no skull.')) + fixed;
 }
 function describe(o) {
   const fl = G.floor, R = D.CONFIG.rooms;
@@ -4403,11 +4406,13 @@ function describe(o) {
 // The engine already prices every walk (D.options: its steps, gates, tolls, Health on the way) and measures the way on (D.exitInfo: the steps to the exit, and what is left of the allowance there, below zero when it is
 // past it). wayFacts reads those and the step clock into plain data; wayWords turns it into the line a way gets in the list under the maze: its steps, what it stops at, what it costs, and how it leaves you for the exit.
 const SKULL = '☠';
-function clockWords(G) {   // the skull clock in a sentence: the first skull is the 4th step past the allowance (up to 3 over are free), then every 4th
+const skullsText = n => (n > 1 ? n + ' skulls' : 'a skull') + ' (\u2212' + n + ' Health)';   // "a skull (−1 Health)", "3 skulls (−3 Health)"
+function clockWords(G) {   // the skull clock as arithmetic: the steps left of the allowance, plus the 3 free ones past it, make the steps that are safe; the next one is a skull, then every 4th
   const fl = G.floor, A = D.allowance(G), k = D.CONFIG.steps.skull, used = fl.steps;
   if (fl.clockStopped) return 'The step clock has stopped: the boss is the last thing on this page.';
-  const over = Math.max(0, used - A), next = A + k * (Math.floor(over / k) + 1) - used;
-  return (over ? 'Next skull (\u22121 Health) in ' : 'First skull (\u22121 Health) in ') + stepsText(next) + ', then every ' + k + 'th step.';
+  const left = A - used, over = Math.max(0, used - A), next = A + k * (Math.floor(over / k) + 1) - used;
+  if (over > 0) return 'Past the allowance: ' + (next > 1 ? stepsText(next - 1) + ' before the next skull' : 'the next step is a skull') + ' (\u22121 Health), then every ' + k + 'th step.';
+  return (left > 0 ? stepsText(left) + ' left' : 'No steps left') + ', +' + (k - 1) + ' free = ' + (left + k - 1) + ' before the first skull (\u22121 Health), then every ' + k + 'th step.';
 }
 const ROOM_SHORT = { fountain: () => 'the fountain', bait: G => 'a Meal (+' + D.baitHeal(G) + ' Health)', light: () => 'a Flask (+' + D.CONFIG.rewards.light + ' Energy)', chest: G => 'a chest (+' + D.chestHeal(G) + ' Health, +' + D.CONFIG.rewards.chest[1] + ' Energy)', rest: G => 'a rest (+' + D.restHeal(G) + ' Health, ' + D.CONFIG.rooms.restSteps + ' steps)', altar: () => 'an altar' };
 function wayFacts(G, o) {
@@ -4421,27 +4426,27 @@ function wayFacts(G, o) {
   if (o.hp) W.prices.push(o.hp + ' Health on the way');
   W.head = wayHead(G, W);
   const ex = D.exitInfo(G, o);
-  if (ex) { const atExit = A - ex.left; W.exit = { toExit: ex.toExit, left: ex.left, skulls: skulls(used, atExit), fixed: ex.fixed }; }
+  if (ex) { const atExit = A - ex.left; W.exit = { toExit: ex.toExit, left: ex.left, skulls: skulls(used, atExit), fixed: ex.fixed }; W.tone = ex.left >= 0 ? 'ok' : W.exit.skulls > 0 ? 'bad' : 'tight'; }
   return W;
 }
 function wayHead(G, W) {   // what the way is: where it stops, in a few words
   const o = W.o, e = o.fight, lv = G.lvl, fl = G.floor;
-  if (W.kind === 'fight') return e.kind === 'boss' ? (examOf(G, e) ? e.name + ' asks what you carry' : 'a round against ' + e.name) : e.kind === 'elite' ? 'the elite: fight it, or pay ' + D.passCost(G) + ' Energy' : e.known ? D.foeName(e) + ' again (total ' + e.known.total + ')' : (e.card ? D.foeName(e) : 'a hidden enemy') + ': fight it, or pay ' + D.passCost(G) + ' Energy';
+  if (W.kind === 'fight') return e.kind === 'boss' ? (examOf(G, e) ? e.name + ' asks what you carry' : 'a round against ' + e.name) : e.kind === 'elite' ? 'the elite: fight or pay ' + D.passCost(G) + ' Energy' : e.known ? D.foeName(e) + ' again (total ' + e.known.total + ')' : (e.card ? D.foeName(e) : 'a hidden enemy') + ': fight or pay ' + D.passCost(G) + ' Energy';
   if (W.kind === 'fall') return D.isChapterEnd(fl.level) ? 'the hole: this chapter is won' : lv && lv.kind === 'purgatory' && lv.at + 1 < lv.fls.length ? 'the stair to the upper grid' : lv && lv.kind === 'paradise' && lv.door ? 'the hole: ' + lv.door.name + '’s reward' : lv && lv.kind === 'purgatory' ? 'the stair up (the Lightening)' : 'the hole: down to the next circle';
   if (W.kind === 'gamble') return 'a dotted hole: roll to see if it is real';
   if (W.kind === 'mark') return 'a “?” mark: flip a card';
   const t = D.roomAt(G, fl, o.end[0], o.end[1]);
   return t ? ROOM_SHORT[t](G) : W.kind === 'ride' ? 'a bubble: it carries you on, free' : 'the next fork';
 }
-function wayExit(W) {   // how the way leaves you for the exit: its distance, and what is left of the allowance there (or how far past it, and the skulls that cost)
+function wayExit(W) {   // how the way leaves you for the exit: its distance, and whether you arrive with steps to spare or too many (and the skulls that costs)
   const x = W.exit; if (!x) return '';
-  if (W.stopped) return 'exit ' + x.toExit + ' on';
-  const here = W.kind === 'fall' ? '' : 'exit ' + x.toExit + ' on, ';
-  return here + (x.left >= 0 ? x.left + ' to spare' : -x.left + ' over' + (x.skulls > 0 ? ' (' + SKULL + ' −' + x.skulls + ')' : ''));
+  const on = W.kind === 'fall' ? 'This is the exit' : 'Exit is ' + stepsText(x.toExit) + ' on';
+  if (W.stopped) return on;
+  return on + ': ' + (x.left > 0 ? stepsText(x.left) + ' to spare, no skull' : x.left === 0 ? 'no steps to spare, no skull' : x.skulls > 0 ? stepsText(-x.left) + ' too many: ' + skullsText(x.skulls) : stepsText(-x.left) + ' too many, but free (no skull)');
 }
 function wayWords(W) {   // the pieces of a row: [steps, head, price (cost on the way, if any), exit]
-  const price = W.prices.concat(W.skulls > 0 ? [SKULL + ' −' + W.skulls + ' Health'] : []);
-  return { n: W.kind === 'fight' ? '⚔' : W.kind === 'fall' ? '◯' : String(W.steps), head: W.head, price: price.join(', '), exit: wayExit(W) };
+  const price = W.prices.concat(W.skulls > 0 ? [skullsText(W.skulls)] : []);
+  return { n: W.kind === 'fight' ? '\u2694' : W.kind === 'fall' ? '\u25ef' : String(W.steps), head: W.head, price: price.join(', '), exit: wayExit(W) };
 }
 // the walks you can take, as dots on the board. Walks that end on the same square (the fast and the safe way of a crossroads, a gate paid two ways) are spread side by side so each can be reached (audit F1);
 // on a phone or tablet a tap SELECTS a walk (its path and its price show, with a Walk here button) and a second tap on it walks it, so a slip of the finger costs nothing (audit F3)
@@ -4486,9 +4491,9 @@ function renderWays(pickers) {
   list.innerHTML = ''; const rows = pickers.map(p => ({ p, W: wayFacts(G, p.o) }));
   rows.sort((a, b) => (b.W.exit ? b.W.exit.left : -999) - (a.W.exit ? a.W.exit.left : -999) || a.W.steps - b.W.steps);   // the most left of the allowance at the exit first: the way that costs least by the clock
   head.textContent = rows.length === 1 ? 'The only way from here' : 'Ways from here (' + rows.length + ')';
-  clock.textContent = (rows.length === 1 ? '' : (touchy() ? 'Tap one to see its path, tap it again to walk. ' : 'Click one to walk it; hover to see its path. ')) + clockWords(G);
+  clock.textContent = clockWords(G); list.setAttribute('aria-label', 'Ways from here. ' + (touchy() ? 'Tap one to see its path, tap it again to walk.' : 'Click one to walk it; hover to see its path.'));
   for (const { p, W } of rows) {
-    const w = wayWords(W), li = document.createElement('li'), b = document.createElement('button'); b.type = 'button'; b.className = 'way ' + W.kind + (selIdx === p.i ? ' picked' : ''); b.dataset.i = p.i; b.setAttribute('aria-pressed', selIdx === p.i ? 'true' : 'false');
+    const w = wayWords(W), li = document.createElement('li'), b = document.createElement('button'); b.type = 'button'; b.className = 'way ' + W.kind + (W.tone ? ' tone-' + W.tone : '') + (selIdx === p.i ? ' picked' : ''); b.dataset.i = p.i; b.setAttribute('aria-pressed', selIdx === p.i ? 'true' : 'false');
     b.setAttribute('aria-label', (/^\d+$/.test(w.n) ? w.n + ' step' + (w.n === '1' ? '' : 's') + ': ' : '') + w.head + (w.price ? ', ' + w.price : '') + (w.exit ? '. ' + w.exit : ''));
     b.innerHTML = '<span class="wn"></span><span class="wt"></span><span class="wx"></span>'; b.querySelector('.wn').textContent = w.n; b.querySelector('.wt').textContent = w.head + (w.price ? ', ' + w.price : ''); b.querySelector('.wx').textContent = w.exit;
     b.addEventListener('click', p.activate); b.addEventListener('mouseenter', p.show); b.addEventListener('focus', p.show); b.addEventListener('mouseleave', p.hide); b.addEventListener('blur', p.hide);
