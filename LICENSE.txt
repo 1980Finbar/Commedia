@@ -1,0 +1,27 @@
+Commedia
+Copyright (c) 2026 Finbar Bruins. All rights reserved.
+
+Commedia is free to play. This licence says what you may and may not do with it.
+
+1. What this covers
+This licence covers the game Commedia: its code, rules text, wording, drawings, symbols and design, whether you meet it as the web page, as the file Commedia.html, or as any copy of either. It does not cover the material by others listed in section 6.
+
+2. What you may do
+You may play Commedia free of charge, in a web browser, from the web page or from the file Commedia.html. You may keep one copy of the file on each device you own, for your own personal, non-commercial use. Linking to the web page is welcome.
+
+3. What you may not do without my written permission
+- copy the game or any part of it, or give, send, upload or publish it for others (a link to the web page is fine);
+- sell, rent, lend or charge for it, or include it in anything that is sold or charged for;
+- change it, translate it, or make anything based on it;
+- take its code, text, wording or drawings for other works;
+- remove or change this notice.
+To ask for permission, contact me through github.com/1980Finbar.
+
+4. Ending
+If you break these terms, your permission to use Commedia ends.
+
+5. No warranty
+Commedia is provided as it is, without any promise that it works or is free of errors. To the extent the law allows, I am not liable for any loss or damage from using it.
+
+6. Material by others
+The fonts Atkinson Hyperlegible (Copyright 2020 Braille Institute of America, Inc.) and Spectral (Copyright 2017 The Spectral Project Authors) are used under the SIL Open Font License, Version 1.1; the full texts are in FONT-LICENSES.txt. The Italian lines are by Dante Alighieri (died 1321) and are in the public domain. This material keeps its own terms.

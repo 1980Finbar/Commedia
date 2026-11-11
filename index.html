@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Commedia, Copyright (c) 2026 Finbar Bruins. All rights reserved. Free to play for personal use under the licence at the bottom of the page. Fonts: SIL Open Font License 1.1. -->
 <title>Commedia</title>
 <meta name="theme-color" content="#F2EADB" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1A1612" media="(prefers-color-scheme: dark)">
@@ -219,6 +220,9 @@ button.pcard:disabled { cursor: default; opacity: 1; }
 a.btn { display: inline-block; padding: 9px 16px; border-radius: 9px; border: 1px solid var(--grid); background: var(--sheet); color: var(--text); text-decoration: none; }   /* a link that looks like the buttons (Rules, Back to the game): it works with no script, and the browser's Back returns to where you were */
 a.btn:hover { border-color: var(--ink); }
 a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
+.legal { margin: 0 clamp(14px, 3vw, 34px) 28px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.legal p { margin: 0 0 6px; } .legal a { color: var(--ink); } .legal summary { cursor: pointer; padding: 4px 0; }
+.licence-text { white-space: pre-wrap; margin: 6px 0 0; padding: 10px 12px; background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; font: 12.5px/1.5 var(--ui); color: var(--text); }
 .card h2 { font: 700 26px var(--book); margin: 0; color: var(--ink); }
 .card h3 { font: 700 18px var(--book); margin: 18px 0 6px; color: var(--ink); }
 .three { counter-reset: n; list-style: none; padding: 0; margin: 10px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
@@ -472,8 +476,39 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
     <h3>On your phone or tablet</h3>
     <p>Commedia runs entirely in your browser: no account, nothing is sent anywhere, and once this page has loaded it needs no connection. A run you leave is kept on this device, in this browser; clearing the browser’s site data erases it, and the Ledger with it.</p>
     <p id="install-tip" hidden>To keep it on this device and play offline: on an iPhone or iPad, Share, then Add to Home Screen; on Android, the browser menu, then Install app (or Add to Home screen). After that it opens like an app, with no connection.</p>
+    <p id="download-tip" hidden>On a computer you can also download it as one file that plays with no internet: <a href="Commedia.zip" download>Commedia.zip</a>. Unzip it and open Commedia.html. (A phone or tablet cannot open a loose file: use Add to Home Screen above.)</p>
   </div>
 </section>
+<footer class="legal">
+  <p>Commedia &copy; 2026 Finbar Bruins. All rights reserved. Free to play for personal use under <a href="#licence" id="licence-link">this licence</a>. Fonts: Atkinson Hyperlegible and Spectral, under the SIL Open Font License 1.1.</p>
+  <details id="licence"><summary>Licence</summary><pre class="licence-text">Commedia
+Copyright (c) 2026 Finbar Bruins. All rights reserved.
+
+Commedia is free to play. This licence says what you may and may not do with it.
+
+1. What this covers
+This licence covers the game Commedia: its code, rules text, wording, drawings, symbols and design, whether you meet it as the web page, as the file Commedia.html, or as any copy of either. It does not cover the material by others listed in section 6.
+
+2. What you may do
+You may play Commedia free of charge, in a web browser, from the web page or from the file Commedia.html. You may keep one copy of the file on each device you own, for your own personal, non-commercial use. Linking to the web page is welcome.
+
+3. What you may not do without my written permission
+- copy the game or any part of it, or give, send, upload or publish it for others (a link to the web page is fine);
+- sell, rent, lend or charge for it, or include it in anything that is sold or charged for;
+- change it, translate it, or make anything based on it;
+- take its code, text, wording or drawings for other works;
+- remove or change this notice.
+To ask for permission, contact me through github.com/1980Finbar.
+
+4. Ending
+If you break these terms, your permission to use Commedia ends.
+
+5. No warranty
+Commedia is provided as it is, without any promise that it works or is free of errors. To the extent the law allows, I am not liable for any loss or damage from using it.
+
+6. Material by others
+The fonts Atkinson Hyperlegible (Copyright 2020 Braille Institute of America, Inc.) and Spectral (Copyright 2017 The Spectral Project Authors) are used under the SIL Open Font License, Version 1.1; the full texts are in FONT-LICENSES.txt. The Italian lines are by Dante Alighieri (died 1321) and are in the public domain. This material keeps its own terms.</pre></details>
+</footer>
 <script>
 /* Commedia: the door sheets of the printed books (maze seeds 0, 1, 2, 3, 4), drawn once by the designer in src/engine.js.
    Written by node tools/sheets.js; the engine draws a book again whenever its settings differ from the tag stored here. */
@@ -4200,6 +4235,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const cpr = $('#card-paradise-rules'); if (cpr) { cpr.textContent = paradiseRules(); cpr.hidden = !cpr.textContent; }
   const hb = $('#card-heat-box'); if (hb) { if (D.Heat && D.CONFIG.heat) { $('#card-heat-text').textContent = heatRules(); const hl = $('#card-heat'), HT = D.CONFIG.heat.ticks; for (const b of D.CONFIG.heat.boxes) for (const id of b.ticks) { const t = HT[id], li = document.createElement('li'); li.innerHTML = '<b></b> <span></span>'; li.querySelector('b').textContent = t.name + ' (Heat ' + t.heat + '):'; li.querySelector('span').textContent = t.text + (t.needs ? ' Needs the first tick.' : ''); hl.appendChild(li); } } else hb.hidden = true; }
   const tip = $('#install-tip'); if (tip) { const nav = window.navigator || {}, installed = nav.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches); tip.hidden = !(document.querySelector('link[rel="manifest"]') && !installed); }   // shown only where the page can be kept offline (the web package carries a manifest) and not once it is installed
+  const dl = $('#download-tip'); if (dl) dl.hidden = !document.querySelector('link[rel="manifest"]');   // the download link is for the hosted web build only (it carries a manifest; Commedia.zip sits next to the page)
+  const ll = $('#licence-link'); if (ll) ll.addEventListener('click', () => { const d = $('#licence'); if (d) d.open = true; });   // the notice's link opens the licence text under it
   const co = $('#card-offers'); if (co) D.CONFIG.carry.table.forEach((id, i) => { const tr = document.createElement('tr'); tr.innerHTML = '<td></td><td><b></b> <span></span></td>'; tr.children[0].textContent = i + 1; tr.querySelector('b').textContent = D.CONFIG.carry.offers[id].name + ':'; tr.querySelector('span').textContent = D.CONFIG.carry.offers[id].text; co.appendChild(tr); });
   const cx = $('#card-boxes'); if (cx) for (const x of D.CONFIG.carry.boxes) { const li = document.createElement('li'); li.textContent = '☐ ' + x.text + (x.opens ? ' (opens ' + D.CONFIG.builds[x.opens].name + ')' : '') + (x.opensEntry ? ' (opens ' + ENTRY_TEXT[x.opensEntry][0] + ')' : ''); cx.appendChild(li); }
   cardSymbols();
