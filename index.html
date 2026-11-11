@@ -1071,7 +1071,7 @@ const CONFIG = {
     { steps: 25, base: 11, hidden: 2 }, { steps: 26, base: 12, hidden: 2 }, { steps: 33, base: 12, hidden: 2 },                                         // 7-9: little slack, two enemies hidden
   ],
   intro: { mazefoe: 2, gate: 2, toll: 2, altar: 3, elite: 4 },   // the first circle each kind of place appears on (the sheets are the same on every page; a page lays only what its circle allows): a first game meets fewer things at once
-  steps: { skull: 4, floorRealm: 0 },     // every 4th step past the allowance costs 1 Health (an Inferno page never allows under 4 steps; a Purgatory or Paradise page's header may say as little as floorRealm, Step P5)
+  steps: { skull: 4, floorRealm: 0, energyBuy: null /* OFF (study of 11 Nov 2026): { rate, perPage, reserve }: Energy pays a skull, rate Energy instead of 1 Health, at most perPage a page, keeping reserve Energy back */ },     // every 4th step past the allowance costs 1 Health (an Inferno page never allows under 4 steps; a Purgatory or Paradise page's header may say as little as floorRealm, Step P5)
   bosses: {                // a 3x3 boss sits over the hole in his page's exit corner; the hole opens when he falls
     3: { name: 'Cerberus', hits: 3, bonus: 0, miss: 1, energy: 4 },
     9: { name: 'Lucifer', hits: 4, bonus: 2, miss: 1, energy: 0, turn: 4 },   // turn: Energy for one turn of the top number card, once an attack, any time you are short (it counts for you)
@@ -1089,6 +1089,7 @@ const CONFIG = {
     swingOnly: true,       // Step P5 (the veteran's E1): a blind swing is the whole attack: after it you add no cards, and short of him it is a miss (false: the Step P4 rule, add cards after it)
     elite: { more: 1, blows: 1, loot: 2 },   // an elite (two court cards): the stronger, with one card more and a blow harder; a win takes its two highest cards
     dark: 1,               // a fight you start from the dark gets +1
+    buy: { price: 4, max: 2 },   // short in a fight with an ordinary enemy, you may pay price Energy to draw the top number card into your hand, up to max times a fight (the owner's idea of 11 Nov 2026; 4 is what letting an enemy pass costs, the altar sells a card for 3: docs/reviews/fair-fight-study-2026-11-11.md; null switches it off)
     steps: 0,              // steps a fight takes from the allowance (a boss attack takes none)
     paradiseSteps: 2,      // steps a fight takes from the allowance on a Paradise page (Inferno and Purgatory fights take none): a fight there is a cost, not a free page; the pages' allowances carry +1 for it
   },
@@ -1109,7 +1110,7 @@ const CONFIG = {
   },
   num: { H: ['health', 1, 2], D: ['energy', 2, 4], S: ['blows', 1, 2], C: ['energy', -2, -4] },   // "?": 2-5 small, 6-10 big
   rewards: { bait: 3, light: 3, chest: [2, 2], fountain: { health: 1, energy: 3 } },             // bait Health, light Energy, chest Health and Energy, fountain Health and (Energy or a hit card)
-  rooms: { rest: 3, restSteps: 4, altarCard: 3, altarStrength: 4, gateStrength: 2, gateCard: 6, gateEnergy: 5, gateBlows: 2, toll: 4 },   // the room sheet's rooms and the maze sheet's prices (a gate: strength 2 walks through; or a hit card of 6 or more; or 2 blows)
+  rooms: { rest: 3, restSteps: 4, altarCard: 3, altarStrength: 4, altarSatchel: null /* OFF (study of 11 Nov 2026): { price, max }: the altar sells +1 hand size for the rest of the run */, gateStrength: 2, gateCard: 6, gateEnergy: 5, gateBlows: 2, toll: 4 },   // the room sheet's rooms and the maze sheet's prices (a gate: strength 2 walks through; or a hit card of 6 or more; or 2 blows)
   event: { from: 6, to: 8, steps: [-4, -4, 0, 0, 4, 4] },   // the smoke die (Step P4): one more die as each page from circle `from` to `to` is set up; the page's step allowance moves by steps[die - 1]. Luck that no plan can remove: it caps the planning expert (null = off)
   circles: 9,              // the nine circles of Inferno; Lucifer waits in the ninth
   corners: { start: 'TL', holes: ['TR', 'BR', 'TL', 'BL', 'BR', 'TR', 'BL', 'TR', 'BL'] },   // one hole per page, in a corner; you land on the same corner of the next page
@@ -1958,7 +1959,7 @@ function gridWalk(fl) { const n = fl.w, order = fl.order, wd = fl.noGo; let N = 
 function buildOf(id) { const B = CONFIG.builds || {}; return B[id] || B[CONFIG.build] || { name: 'The Pilgrim', lever: {} }; }
 function lever(G, k, def) { const L = G && G.lever; return L && L[k] !== undefined ? L[k] : def; }
 function spendE(G, n) { G.energy -= n; G.stats.eSpent = (G.stats.eSpent || 0) + n; }   // every Energy point paid out, booked for the lab
-function handMax(G) { const hb = G.handBonus; return lever(G, 'hand', CONFIG.start.hand) + (hb && (!G.floor || G.floor.level < hb.until) ? hb.n : 0); }
+function handMax(G) { const hb = G.handBonus; return lever(G, 'hand', CONFIG.start.hand) + (hb && (!G.floor || G.floor.level < hb.until) ? hb.n : 0) + (G.handExtra || 0); }
 // a run's setup: { entry: 'normal' | 'hard' | 'brutal' } (chapters 1-3, 2-3, 3) or { chapter, gifts: [ids], until } for the lab (until: the chapter that ends the run as a win, default 3 when a chapter or an entry is
 // given and 1 when not: a game with no run object is the Inferno of Steps P1-P4), plus { offer } (Normal only) and { state: { strength, hand: [ranks] } } (the lab replays an arrival state)
 function runSpec(R) {
@@ -2578,6 +2579,7 @@ function resolve(G, p, o) {
     case 'leave': G.stats.left++; log(G, 'You leave it where it stands.', 'event'); return;
     case 'cover': coverKnown(G, fl.enemies[p.data.at], o.cards); return;
     case 'add': { const cs = playCards(G, o.cards); G.fight.played.push(...cs); log(G, 'You add ' + cardsText(cs) + ': you have ' + fightMine(G) + '.', 'fight'); fightStep(G); return; }
+    case 'buy': { const B = CONFIG.fight.buy; spendE(G, B.price); const c = draw(G, 'numbers'); G.fight.bought = (G.fight.bought || 0) + 1; G.stats.bought = (G.stats.bought || 0) + 1; if (c) { G.hand.push(c); G.hand.sort((a, b) => b.rank - a.rank); } log(G, 'You buy a card: −' + B.price + ' Energy, ' + (c ? cardName(c) : 'nothing') + ' into your hand.', 'fight'); fightStep(G); return; }
     case 'swing': { const c = draw(G, 'numbers'); G.fight.played.push(c); G.fight.swung = true; log(G, 'You swing blind with the top number card, ' + cardName(c) + ': you have ' + fightMine(G) + (fightMine(G) < G.fight.its ? ', short of him: round lost.' : '.'), 'fight'); fightStep(G); return; }
     case 'energyTurn': { const b = bossAt(G.floor.level), c = draw(G, 'numbers'); spendE(G, b.turn); G.fight.paid = true; if (c) G.fight.played.push(c); log(G, 'You pay ' + b.turn + ' Energy and flip ' + (c ? cardName(c) : 'nothing') + ': you have ' + fightMine(G) + '.', 'fight'); fightStep(G); return; }
     case 'stop': fightLost(G); return;
@@ -2622,6 +2624,7 @@ function cloneGame(G) {
 // every Health point lost is booked by cause and circle, for the lab. The Miser's lever: blows, terrain and the clock take Energy first.
 function hurt(G, n, cause) {
   if (n <= 0) return 0;
+  if (cause === 'steps' && CONFIG.steps.energyBuy && G.floor) { const B = CONFIG.steps.energyBuy, k = Math.min(n, B.perPage - (G.floor.skullsPaid || 0), Math.floor(Math.max(0, G.energy - (B.reserve || 0)) / B.rate)); if (k > 0) { spendE(G, k * B.rate); G.floor.skullsPaid = (G.floor.skullsPaid || 0) + k; G.stats.skullsPaid = (G.stats.skullsPaid || 0) + k; n -= k; log(G, 'Energy pays ' + k + (k > 1 ? ' skulls' : ' skull') + ': −' + k * B.rate + ' Energy instead of ' + k + ' Health.', 'event'); } if (n <= 0) return 0; }   // (the study's switch: off unless CONFIG.steps.energyBuy)
   let e = 0; if (lever(G, 'energyFirst', false) && cause !== 'energy') { e = Math.min(G.energy, n); spendE(G, e); n -= e; }
   G.health -= n; const L = G.stats.lost, c = cause || 'other';
   (L[c] || (L[c] = new Array(CONFIG.depths + 1).fill(0)))[G.floor ? G.floor.level : 0] += n;
@@ -2738,6 +2741,7 @@ function askAdd(G, e, gap) {
   const opts = swungOnly ? [] : covers(G.hand, gap).map(cs => ({ label: 'Add ' + cardsText(cs) + ' (+' + cs.reduce((a, c) => a + c.rank, 0) + ')', act: 'add', cards: cs }));
   if (f.boss && !f.played.length && CONFIG.fight.swing === 'boss') opts.push({ label: 'Swing blind: the top number card counts for you (and nothing else: short of him you lose the round)', act: 'swing' });
   if (f.boss && !f.paid && !swungOnly) { const b = bossAt(G.floor.level); if (b.turn && G.energy >= b.turn) opts.push({ label: 'Pay ' + b.turn + ' Energy: flip the top number card, it counts for you', act: 'energyTurn' }); }
+  if (!f.boss && CONFIG.fight.buy && G.energy >= CONFIG.fight.buy.price && (f.bought || 0) < CONFIG.fight.buy.max) opts.push({ label: 'Buy a card: pay ' + CONFIG.fight.buy.price + ' Energy, draw the top number card into your hand', act: 'buy' });   // (the study's switch: off unless CONFIG.fight.buy)
   opts.push({ label: f.boss ? 'Stop: round lost (' + f.blows + ' damage)' : 'Stop: you lose (' + f.blows + ' damage)', act: 'stop' });
   if (opts.length === 1) G.forcedLoss = G.forcedLoss || f.boss;
   ask(G, (e.kind === 'boss' ? e.name : 'It') + ' has ' + f.its + ', you have ' + fightMine(G) + ': ' + gap + ' short' + (f.turned.length < f.k ? ', with ' + (f.k - f.turned.length) + ' card' + (f.k - f.turned.length > 1 ? 's' : '') + ' still to come' : '') + (swungOnly ? '. The blind swing was the whole round: it is lost.' : '. Add hand cards, or stop?'), opts, 'add', { at: f.at, gap });
@@ -2934,6 +2938,7 @@ function square(G) {
     const ac = altarCost(G, 'card'), as = altarCost(G, 'strength');
     if (G.energy >= ac) opts.push({ label: 'Pay ' + ac + ' Energy: a hand card', act: 'altar', buy: 'card' });
     if (G.energy >= as && G.strength < CONFIG.start.maxStrength) opts.push({ label: 'Pay ' + as + ' Energy: +1 strength', act: 'altar', buy: 'strength' });
+    { const S = A.altarSatchel; if (S && (G.handExtra || 0) < S.max && G.energy >= S.price) opts.push({ label: 'Pay ' + S.price + ' Energy: your hand holds one more card for the rest of the run', act: 'altar', buy: 'satchel' }); }   // (the study's switch: off unless CONFIG.rooms.altarSatchel)
     opts.push({ label: 'Go on', act: 'none' });
     if (opts.length > 1) ask(G, 'An altar: Energy buys a hand card or an upgrade (+1 strength, most ' + CONFIG.start.maxStrength + ').', opts, 'altar');
   }
@@ -2945,10 +2950,11 @@ function drinkFountain(G, take) {
   if (take === 'card') { const got = []; for (let i = 0; i < m; i++) { const c = draw(G, 'numbers'); if (c) { got.push(c); takeCard(G, c); } } log(G, 'Fountain: ' + (h ? h + ' and ' : '') + 'a hand card, ' + cardsText(got) + '.', 'good'); }
   else { const e = give(G, 'energy', R.energy * m + mod(G, 'fountainEnergy')); log(G, 'Fountain: ' + ([h, e].filter(Boolean).join(', ') || 'nothing') + '.', 'good'); }
 }
-function altarCost(G, buy) { const A = CONFIG.rooms, d = G.floor.page.dials.altar || 0; return (buy === 'card' ? A.altarCard : A.altarStrength) + d; }
+function altarCost(G, buy) { const A = CONFIG.rooms, d = G.floor.page.dials.altar || 0; return (buy === 'card' ? A.altarCard : buy === 'satchel' ? (A.altarSatchel ? A.altarSatchel.price : 99) : A.altarStrength) + (buy === 'satchel' ? 0 : d); }
 function altar(G, buy) {
   G.stats.rooms.altar = (G.stats.rooms.altar || 0) + 1; const c0 = altarCost(G, buy);
   if (buy === 'card') { spendE(G, c0); const c = draw(G, 'numbers'); takeCard(G, c); log(G, 'The altar: −' + c0 + ' Energy, a hand card: ' + cardName(c) + '.', 'good'); }
+  else if (buy === 'satchel') { spendE(G, c0); G.handExtra = (G.handExtra || 0) + 1; G.stats.satchels = (G.stats.satchels || 0) + 1; refill(G, 'The altar: −' + c0 + ' Energy, your hand now holds ' + handMax(G) + ' cards'); }
   else { spendE(G, c0); gain(G, 'strength', 1); log(G, 'The altar: −' + c0 + ' Energy, +1 strength (' + G.strength + ').', 'good'); }
 }
 // a hole (or a stair, or a door's hole): in a chain of grids you go on to the next grid, on the same corner; at the end of a level you are paid for gold, take the door's gift (Paradise)
@@ -3184,11 +3190,19 @@ function foeChoice(G, pol, e, opt) {
   if (pol.naiveFight) return { fight: fight > 0 ? 1 : fight, pass: fight === -Infinity ? 0 : pass === -Infinity ? -Infinity : -1, best: 0 };
   return { fight, pass, best: Math.max(fight, pass) };
 }
+// the study's "buy a card" option (CONFIG.fight.buy, off by default): when nothing in the hand covers the gap, buy if the cards still to be bought could cover it and the Energy left stays above a reserve
+function buyChoice(G, pol) {
+  const p = G.pending, i = p.options.findIndex(o => o.act === 'buy'); if (i < 0) return -1;
+  const B = D.CONFIG.fight.buy, f = G.fight, left = B.max - (f.bought || 0), gap = f.its - D.fightMine(G), hand = G.hand.reduce((a, c) => a + c.rank, 0);
+  if (gap > hand + (pol.naiveFight ? 10 : 6.5) * left) return -1;   // a first-timer hopes for a ten, a regular counts on an average card and a little
+  if (G.energy - B.price < (pol.naiveFight ? 0 : (pol.keepE !== undefined ? pol.keepE : 4))) return -1;
+  return i;
+}
 // a live fight, at the "add or stop" question: the value of each option
 function addChoice(G, pol) {
   const f = G.fight, p = G.pending, e = G.floor.enemies[f.at];
   if (f.boss) return bossAddChoice(G, pol, e);
-  if (pol.naiveFight) { for (let i = 0; i < p.options.length; i++) if (p.options[i].act === 'add') return i; return p.options.length - 1; }   // the smallest cover first; stop only when nothing covers
+  if (pol.naiveFight) { for (let i = 0; i < p.options.length; i++) if (p.options[i].act === 'add') return i; const b = buyChoice(G, pol); return b >= 0 ? b : p.options.length - 1; }   // the smallest cover first; buy a card if that can cover; stop only when nothing does
   const spec = { blows: f.blows, loot: f.loot }, M = fightModel(G, pol, spec), mine = D.fightMine(G), d = mine - f.its, left = f.k - f.turned.length, mx = Math.max(0, ...f.turned.map(c => c.rank));
   let best = p.options.length - 1, bv = M.handV(M.full) + M.lossV;
   p.options.forEach((o, i) => {
@@ -3196,6 +3210,7 @@ function addChoice(G, pol) {
     let m = M.full, sum = 0; for (const c of o.cards) { const j = G.hand.findIndex((h, jj) => h.rank === c.rank && h.suit === c.suit && (m >> jj & 1)); if (j >= 0) { m &= ~(1 << j); sum += c.rank; } }
     const v = M.V(m, d + sum, left, mx) + (G.rng.next() - 0.5) * (pol.noise || 0) * 0.2; if (v > bv) { bv = v; best = i; }
   });
+  if (best === p.options.length - 1) { const b = buyChoice(G, pol); if (b >= 0) return b; }
   return best;
 }
 // ---------- a boss, solved exactly: attacks until he falls or you do. Each attack he turns one card (plus his number); a hit when you
@@ -3459,7 +3474,7 @@ function pendingChoice(G, pol) {
   }
   else if (id === 'fountain') { const R = D.CONFIG.rewards.fountain, m = D.lever(G, 'rewards', 1); i = pol.naiveFight ? 0 : eGain(G, pol, R.energy * m) >= cardGain(G, pol, avgCard(G)) * m ? 0 : 1; }
   else if (id === 'rest') i = pol.naive ? (G.health <= G.maxHealth - 4 ? 0 : 1) : roomValue(G, pol, 'rest') > 0 ? 0 : 1;
-  else if (id === 'altar') { let bv = 0; i = opts.length - 1; opts.forEach((o, j) => { if (o.act !== 'altar') return; const A = D.CONFIG.rooms, v = o.buy === 'card' ? cardGain(G, pol, avgCard(G)) - A.altarCard * eWeight(G, pol) : (pol.strength || STRENGTH_VALUE) * strengthLeft(G) - A.altarStrength * eWeight(G, pol); if (v > bv) { bv = v; i = j; } }); }
+  else if (id === 'altar') { let bv = 0; i = opts.length - 1; opts.forEach((o, j) => { if (o.act !== 'altar') return; const A = D.CONFIG.rooms, v = o.buy === 'card' ? cardGain(G, pol, avgCard(G)) - A.altarCard * eWeight(G, pol) : o.buy === 'satchel' ? cardGain(G, pol, avgCard(G)) * (pol.satchel !== undefined ? pol.satchel : 1.5) - A.altarSatchel.price * eWeight(G, pol) : (pol.strength || STRENGTH_VALUE) * strengthLeft(G) - A.altarStrength * eWeight(G, pol); if (v > bv) { bv = v; i = j; } }); }
   else if (id === 'gold') i = pol.naive || sackValue(G, pol) > 0 ? 0 : 1;
   else if (id === 'door') i = pickDoor(G, pol, opts);
   else if (id === 'pledge') i = pickPledge(G, pol, opts);
@@ -4101,6 +4116,7 @@ function fightFacts(G, p) {
     F.stage = 'meet'; F.k = s.k; F.turned = []; F.left = s.k; F.die = 0; F.its = s.start; F.start = s.start; F.played = []; F.mine = base;
   }
   F.short = F.its - F.mine;
+  const bo = (p.options || []).find(o => o.act === 'buy'); F.buy = bo ? { price: D.CONFIG.fight.buy.price, left: D.CONFIG.fight.buy.max - (f ? f.bought || 0 : 0) } : null;   // a card may be bought in this fight (CONFIG.fight.buy): its price and how many more
   return F;
 }
 // what the enemy has, as a sum
@@ -4122,7 +4138,7 @@ function fightLead(F, opts) {
   const reach = (opts || []).some(o => o.cards);   // a way to be level with your hand
   if (F.stage === 'meet') return F.short > 0 ? (F.boss ? 'He' : 'It') + ' starts at ' + F.start + ' and you have ' + F.mine + ', so you must play hand cards worth at least ' + F.short + ' to begin, before it flips anything.' : 'You have as much as its start (' + F.start + '): you play nothing until a flip puts it above you.';
   if (F.stage === 'again') return F.short > 0 ? 'To beat it you need ' + F.short + ' more than your ' + F.mine + '.' + (reach ? ' Play hand cards worth at least ' + F.short + ',' : ' Your hand cannot reach it;') + (F.canPass ? ' pay ' + F.pass + ' Energy,' : '') + ' or walk round it.' : 'Your ' + F.mine + ' already beats it.';
-  return 'You are ' + F.short + ' short. ' + (reach ? 'Play hand cards worth at least ' + F.short + (F.boss ? ' to win the round, or stop and lose it.' : ' to stay in the fight, or stop.') + (F.boss || !F.left ? '' : ' It then flips ' + (F.left > 1 ? 'its next card' : 'its last card') + '.') : 'Your hand cannot reach it, so you can only stop.');
+  return 'You are ' + F.short + ' short. ' + (reach ? 'Play hand cards worth at least ' + F.short + (F.boss ? ' to win the round, or stop and lose it.' : ' to stay in the fight, or stop.') + (F.boss || !F.left ? '' : ' It then flips ' + (F.left > 1 ? 'its next card' : 'its last card') + '.') : 'Your hand cannot reach it, so ' + (F.buy ? 'buy a card (' + F.buy.price + ' Energy) or stop.' : 'you can only stop.'));
 }
 // the line under a button: what it does and what happens next
 function fightCaption(F, o) {   // the line under a button: what it does and what happens next
@@ -4131,6 +4147,7 @@ function fightCaption(F, o) {   // the line under a button: what it does and wha
     case 'fight': return 'Start the fight' + (F.spec.die ? '.' : F.short > 0 ? ': you play hand cards first.' : ': it flips its first card.') + ' A win draws your hand back up to ' + F.hand + '.';
     case 'pass': return 'Pay ' + F.pass + ' Energy to slip past it: no fight and no damage. You walk on' + (F.e.keeper ? ', through the hole' : ', onto its square') + '.';
     case 'add': { const sum = rankSum(o.cards), after = F.mine + sum, over = after - F.its; return 'You would have ' + after + ': ' + (over ? over + ' above ' + Obj : 'level') + (F.boss ? ', so you win the round.' : F.left ? '.' : ', and it has no cards left: you win.'); }
+    case 'buy': return 'Pay ' + D.CONFIG.fight.buy.price + ' Energy and the top number card of the pile goes into your hand, to play at once or keep.' + (F.buy ? (F.buy.left > 1 ? ' You may buy ' + (F.buy.left - 1) + ' more after this one in this fight.' : ' It is the last you may buy in this fight.') : '');
     case 'stop': return F.boss ? 'Lose the round: take ' + F.blows + ' damage' + lost + '.' : 'Stop and lose this fight: take ' + F.blows + ' damage' + lost + (F.left > 0 ? '. All its hidden cards are turned over, so you see its total' : '') + '. Then you can fight it again with cards that beat it, pay ' + F.pass + ' Energy, or walk round it.';
     case 'cover': return (F.base + rankSum(o.cards)) + ' against ' + F.its + ': you win and step onto its square.';
     case 'leave': return 'Walk round it instead: it stays where it is, and you lose no Energy or Health.';
@@ -4179,7 +4196,7 @@ function howtoItems() {
     ['steps', 'Count your steps.', 'Each page allows a number of steps: the first chip at the top says how many (' + allowed + ' on the first circle). Past that, every ' + k + 'th step is a skull and costs 1 Health, and at 0 Health the run ends. Look at the exit before you choose a long way round.'],
     ['trail', 'Never step on your own trail.', 'The shaded squares behind you are your trail, and you cannot walk onto them again. Every choice closes a way behind you.'],
     ['door', 'Doors open one way.', 'A door has a chevron: cross it only the way it points. Every other passage opens both ways. You can never get stuck: from every square there is a way on to the hole.'],
-    ['foe', 'Enemies and your hand.', 'A court card on the map is an enemy. Under the map is your hand of ' + hand + ' number cards. Walk into an enemy and play hand cards to keep level with it, or pay ' + pass + ' Energy to let it pass, or walk round it. The first fight explains itself, step by step.'],
+    ['foe', 'Enemies and your hand.', 'A court card on the map is an enemy. Under the map is your hand of ' + hand + ' number cards. Walk into an enemy and play hand cards to keep level with it, or pay ' + pass + ' Energy to let it pass, or walk round it.' + (C.fight.buy ? ' Short of cards? Pay ' + C.fight.buy.price + ' Energy for a card from the pile, ' + (C.fight.buy.max === 2 ? 'twice' : C.fight.buy.max + ' times') + ' a fight at most.' : '') + ' The first fight explains itself, step by step.'],
     ['hole', 'The hole.', 'Step into the hole to go on: you drop onto the next page, and there is no way back up. There are ' + C.circles + ' circles in Inferno, and a boss covers the last hole of each chapter.'],
   ];
 }
@@ -4221,7 +4238,8 @@ function fillFightCard() {
   const X = fightExample(), li = t => { const n = document.createElement('li'); n.textContent = t; list.appendChild(n); };
   li('The setup. A queen waits on the first circle: it starts at ' + X.start + ' and flips ' + nCards(X.k) + '. You have strength ' + X.strength + ' and the hand ' + X.hand.join(', ') + '. You step into it and choose Fight it (the other choice is to pay ' + X.pass + ' Energy and let it pass).');
   X.steps.forEach(li);
-  const aft = $('#card-fight-after'); if (aft) aft.textContent = 'Had you stopped instead of playing, you would have lost the fight: ' + X.blows + ' damage, and the cards you had played would be gone (a loss draws nothing back). Its hidden cards turn over, so you see its total, and you may fight it again with cards that beat it, pay ' + X.pass + ' Energy, or walk round it.';
+  const B = D.CONFIG.fight.buy, buyLine = B ? ' Short of cards? While a fight is on, you may pay ' + B.price + ' Energy to draw the top number card of the pile into your hand, ' + (B.max === 1 ? 'once' : B.max === 2 ? 'twice' : B.max + ' times') + ' a fight at most, and play it.' : '';
+  const aft = $('#card-fight-after'); if (aft) aft.textContent = 'Had you stopped instead of playing, you would have lost the fight: ' + X.blows + ' damage, and the cards you had played would be gone (a loss draws nothing back). Its hidden cards turn over, so you see its total, and you may fight it again with cards that beat it, pay ' + X.pass + ' Energy, or walk round it.' + buyLine;
 }
 // the end of a chapter is a win of its own, said so before the blessing is chosen: what it gives, and what it opens in the Ledger (Hard after Inferno, Brutal after Purgatory) while that is still closed
 function clearedPanel() {
