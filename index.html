@@ -494,8 +494,8 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
   <div class="card-head"><h2>Rules card</h2><button type="button" id="print">Print this card</button><a class="btn" id="rules-back" href="#top">Back to the game</a></div>
   <h3>Start with three rules</h3>
   <ol class="three">
-    <li><b>Count your steps.</b> Walk any route you like, but <b>never onto a square you have already crossed on this page</b> (your trail). Each page allows a number of steps; past it, every 4th step is a skull: −1 Health. Most of the Health a run loses goes to this track, not to enemies, so look at the exit before you walk.</li>
-    <li><b>Play your hand.</b> Walk into an enemy and it flips blind number cards, one at a time. Whenever it is above you, add cards from your hand to be level, or stop and lose. Or pay 4 Energy to let it pass.</li>
+    <li><b>Count your steps.</b> Walk any route you like, but <b>never onto a square you have already crossed on this page</b> (your trail). Each page allows a number of steps; past it, the first 3 extra steps are free and the 4th is a skull (−1 Health), then every 4th after it. Most of the Health a run loses goes to this track, not to enemies, so look at the exit before you walk.</li>
+    <li><b>Play your hand.</b> Walk into an enemy and it flips blind number cards, one at a time. Whenever it is above you, add cards from your hand to be level, or stop: you lose the fight and take damage. Or pay 4 Energy to slip past it.</li>
     <li><b>Step into the hole</b> (or the stair) to go on: the next circle, grid or page. A boss ends each chapter.</li>
   </ol>
   <p style="margin:10px 0 0;color:var(--muted)">Your first game is the Pilgrim, the plain rules; the other character cards open in the Ledger (below). A hand card is worth about a Health point: spend the smallest that works, and walk round what your hand can’t cover. Everything else is explained the first time you meet it, and below.</p>
@@ -513,7 +513,7 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
     <div class="sym"><svg data-sym="mark-q" aria-hidden="true"></svg><p><b>“?” mark</b>A walk stops on it. Flip a number card: ♥ +1/+2 Health, ♦ +2/+4 Energy, ♠ 1/2 damage, ♣ −2/−4 Energy (2–5 small, 6–10 big).</p></div>
     <div class="sym"><svg data-sym="gate" aria-hidden="true"></svg><p><b>Gate</b>Strength 2 walks through. Otherwise pay 5 Energy, or take 2 damage. It never takes a card and never stops your walk.</p></div>
     <div class="sym"><svg data-sym="toll" aria-hidden="true"></svg><p><b>Toll</b>4 Energy as you pass. It is never paid in Health: with less than 4 Energy you cannot use that way, so walk round.</p></div>
-    <div class="sym"><svg data-sym="fountain" aria-hidden="true"></svg><p><b>Fountain</b>+1 Health and either +3 Energy or a hand card. One per circle.</p></div>
+    <div class="sym"><svg data-sym="fountain" aria-hidden="true"></svg><p><b>Fountain</b>+1 Health and your pick of +3 Energy or a hand card. One per circle.</p></div>
     <div class="sym"><svg data-sym="chest" aria-hidden="true"></svg><p><b>Chest</b>+2 Health and +2 Energy. Meal: +3 Health. Flask: +3 Energy.</p></div>
     <div class="sym"><svg data-sym="rest" aria-hidden="true"></svg><p><b>Rest</b>+3 Health, for 4 steps.</p></div>
     <div class="sym"><svg data-sym="altar" aria-hidden="true"></svg><p><b>Altar</b>3 Energy for a hand card, or 4 Energy for +1 strength (at most 3).</p></div>
@@ -527,7 +527,7 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
     <h3>Setting up a page</h3>
     <p>When you arrive on a page, roll two dice for the clear maze sheet (the first picks it; face up on 1–3 of the second, face down on 4–6) and two for the room sheet; lay both with their stars on the exit corner. Whatever is printed on the page wins, then the maze sheet, then the room sheet. On circles 6, 7 and 8 roll one more die, the smoke die: 1–2 the page allows 4 steps fewer, 3–4 nothing, 5–6 four more. Deal a court card face up at each numbered enemy the page header allows. Draw your hand back up to 5 (and again after every win). Leave the page and the sheets come off, your trail with them, and every court card goes back in the court pile.</p>
     <h3>Walking</h3>
-    <p>You walk by counting squares, turning as you like. A walk goes on until there is something to choose: a junction, a room, a mark, an enemy in the way, a dotted hole, the hole. Tick a box on the page’s step track per square; past the allowance every 4th box is a skull (−1 Health). <b>Never step onto a square you have already crossed on this page.</b> Mark your trail as you go. Follow that and the doors and you can never get stuck: every way leads on to the hole, and there is always a way with no enemy, mark, gate or toll on it. Bubble rides and ice slides are free steps.</p>
+    <p>You walk by counting squares, turning as you like. A walk goes on until there is something to choose: a junction, a room, a mark, an enemy in the way, a dotted hole, the hole. Tick a box on the page’s step track per square; past the allowance the first 3 boxes are free, the 4th is a skull (−1 Health), then every 4th after it. <b>Never step onto a square you have already crossed on this page.</b> Mark your trail as you go. Follow that and the doors and you can never get stuck: every way leads on to the hole, and there is always a way with no enemy, mark, gate or toll on it. Bubble rides and ice slides are free steps.</p>
     <h3>Crossroads and signposts</h3>
     <p>Every maze sheet has two crossroads: a <b>fast</b> way (a few squares, guarded by a gate, a toll or a hidden enemy), a <b>rich</b> way (a few squares longer, through the room sheet’s rooms) and a <b>safe</b> way (the longest, with nothing on it). Other forks are signposted: a reward on the longer way, a risk or a price on the shorter. Choose with your hand and your steps in mind.</p>
     <h3>The fight</h3>
@@ -535,7 +535,7 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
     <p class="example-h"><b>One fight, step by step</b></p>
     <ol id="card-fight-example" class="example"></ol>
     <p id="card-fight-after"></p>
-    <p><b>The details.</b> Move into an enemy: fight, or pay 4 Energy to let it pass. Pay before it flips its first card; you can never pay a shortfall in Health, so without 4 Energy you fight or walk round. Its total starts at the page’s number; it flips number cards one at a time. After each, if it is above you (hand cards you have played, plus strength, plus 1 if you started from the dark), add hand cards until you are level, or stop: you lose and take its damage. Level after its last card is a win: you draw back up to 5 (an elite also gives its two highest cards, and your lowest goes if you hold more than 5). The cards you played are replaced from the pile, so your hand is full again but not always stronger. After a loss its total is known: fight again with cards that beat it, pay 4 Energy, or walk round. The cards you played in a lost fight are gone, and nothing is drawn back until you win a fight or reach a new page. Against a boss who fights you may always swing blind instead of committing cards: the top number card counts for you. Some bosses allow an Energy flip; see the boss list.</p>
+    <p><b>The details.</b> Move into an enemy: fight, or pay 4 Energy to let it pass. Pay before the fight starts (or again after a loss); you can never pay a shortfall in Health, so without 4 Energy you fight or walk round. Its total starts at the page’s number; it flips number cards one at a time. After each, if it is above you (hand cards you have played, plus strength, plus 1 if you started from the dark), add hand cards until you are level, or stop: you lose and take its damage. Level after its last card is a win: you draw back up to 5 (an elite also gives its two highest cards, and your lowest goes if you hold more than 5). The cards you played are replaced from the pile, so your hand is full again but not always stronger. After a loss its total is known: fight again with cards that beat it, pay 4 Energy, or walk round. The cards you played in a lost fight are gone, and nothing is drawn back until you win a fight or reach a new page. Against a boss who fights you may always swing blind instead of committing cards: the top number card counts for you. Some bosses allow an Energy flip; see the boss list.</p>
     <h3>The bosses</h3>
     <ul id="card-bosses"></ul>
     <h3>Chapter 1, Inferno: the circles and their terrain</h3>
@@ -3757,7 +3757,7 @@ function openStart(note, force) {
   renderStart(note); ledgerDrawer(true); $('#start').hidden = false; $('#game').hidden = true; const g = $('#start-go'); if (g && !g.disabled) g.focus();
 }
 function begin(note) {
-  if (!practising() && !LEDGER.runs && !note) note = 'Count your steps: each page allows the number in its first chip, and past it every ' + D.CONFIG.steps.skull + 'th step costs 1 Health. Look at the exit before you walk.';   // the first run says the clock once, before the first move
+  if (!practising() && !LEDGER.runs && !note) note = 'Count your steps: each page allows the number in its “Steps allowed” chip. Past it, ' + skullRule() + '. Look at the exit before you walk.';   // the first run says the clock once, before the first move
   const prac = practising(), build = buildId(); let run = null; $('#practice').checked = false;   // a practice run is chosen each time
   const entry = prac || D.ledgerEntries(LEDGER).open.includes(pick.entry) ? pick.entry : 'normal';
   let heat = entry === 'normal' ? pick.heat.slice() : [];   // Heat: a Normal run's ticks (the screen only lets a legal set be ticked; the Ledger checks it again)
@@ -3933,6 +3933,10 @@ function examHint(G, e, o) {
 // Paradise's two other rules, in the engine's own numbers. The keeper: one more enemy on the hole square of every door (e.keeper), beaten or paid it drops you through, so there is no way round it.
 // The fight's step cost: a fight started on a Paradise page takes D.fightSteps(G) steps from the allowance (letting an enemy pass, and fighting again once its total is known, take none)
 const stepsText = n => n + ' step' + (n === 1 ? '' : 's');
+// the skull rule, said the same way wherever it shows: the first (k − 1) extra steps are free, the kth is the first skull, then every kth after it. Given the allowance it names the steps ("steps 40, 44, 48 and so on"), because
+// "the first 3 extra steps are free, then every 4th step is a skull" was read as step 43 by a reader who had never seen the game
+const ord = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+const skullRule = (A, where) => { const k = D.CONFIG.steps.skull; return k > 1 ? 'the first ' + (k - 1) + ' extra step' + (k === 2 ? ' is' : 's are') + ' free and the ' + ord(k) + ' is a skull (−1 Health), then every ' + ord(k) + ' after it' + (A ? ': ' + (where || '') + 'steps ' + [1, 2, 3].map(i => A + i * k).join(', ') + ' and so on' : '') : 'every extra step is a skull (−1 Health)'; };
 // the advice line on his page (and only there): where you stand against his asks and where each shortfall can be made up, from D.examAdvice(G): good to go, nearly there or behind, then the nearest pickups with how far away they are,
 // what they cost and whether an enemy guards the way (a fight is a gamble; his examination is not). Everything in the engine's own numbers.
 const PICKUP = { bait: 'a meal', light: 'a flask', chest: 'a chest', rest: 'a rest', fountain: 'the fountain', altar: 'the altar' };
@@ -4007,7 +4011,7 @@ function renderTop() {
   t.textContent = fl.clockStopped ? 'the step clock has stopped: the boss is the last thing on this page' : used + ' of ' + A + (left > 0 ? ': ' + pl(left) + ' left, then every ' + k + 'th step is a skull (−1 Health), the first on step ' + (A + k) : ': past it, every ' + k + 'th step is a skull (−1 Health), the next on step ' + (used + next)); box.appendChild(t);
   // the same clock in the status bar (a narrow screen keeps it in view): the steps used, and the skull coming up: −1 Health, in so many steps
   $('#steps-used').textContent = used; $('#steps-max').textContent = '/ ' + A;
-  const sk = $('#steps-skull'); sk.textContent = fl.clockStopped ? '(clock stopped)' : '\u2620 on step ' + (used + next); sk.className = 'skull-line' + (!fl.clockStopped && left <= k ? ' near' : '');
+  const sk = $('#steps-skull'); sk.textContent = fl.clockStopped ? '(clock stopped)' : '\u2620 \u22121 on step ' + (used + next); sk.className = 'skull-line' + (!fl.clockStopped && left <= k ? ' near' : '');
   $('#steps-stat').title = fl.clockStopped ? 'The step clock has stopped: the boss is the last thing on this page.' : 'Steps used on this page, of ' + A + '. The next skull (−1 Health) is on step ' + (used + next) + ': ' + (next > 1 ? pl(next - 1) + ' more are safe' : 'the next step is a skull') + ', then every ' + k + 'th step.';
 }
 // Saint Peter's tally beside your numbers, on every Paradise page (the door you take and what you do on his page are decisions about it); nothing when there is no exam or the page is not in Paradise
@@ -4042,9 +4046,9 @@ function renderHand(sel) {
 const C_ = () => D.CONFIG;
 const NEWS = {
   trail: 'Walk anywhere you like, but never onto a square you have already crossed on this page (your shaded trail). Tap a dot on the page to walk there: its number is the steps it takes.',
-  get steps() { return 'This page allows ' + D.allowance(G) + ' steps (its header says so). Past that, every ' + C_().steps.skull + 'th step is a skull on the step track: −1 Health.'; },
+  get steps() { return 'This page allows ' + D.allowance(G) + ' steps (its header says so). Past that, ' + skullRule(D.allowance(G), 'on this page, ') + '. The skulls are marked on the step track.'; },
   get smoke() { const E = Object.assign({}, C_().event, G && G.heatEvent || {}), st = E.steps, f = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v); const eq = [...new Set(st)].sort((a, b) => a - b).map(v => st.map((x, i) => x === v ? i + 1 : 0).filter(Boolean).join(' or ') + ': ' + (v ? f(v) + ' steps' : 'nothing')); return 'The smoke die: every page from circle ' + E.from + ' to ' + E.to + ' rolls one more die when it is set up. ' + eq.join(', ') + '. The header already counts it.'; },
-  get foes() { const F = C_().fight; return 'Enemies: the numbered court cards are face up; the face-down one is flipped when you meet it. An enemy starts at ' + D.foeSpec(G, { kind: 'foe', card: { rank: 'J' } }).start + ' and flips blind number cards one at a time. Each time it is above you, add cards from your hand to be level, or stop and lose (' + F.blows.J + ' or ' + F.blows.K + ' damage). Level after its last card is a win: you draw your hand back up. Or pay ' + D.passCost(G) + ' Energy to let it pass.' + (fightCost(G) ? ' ' + fightCost(G) : ''); },
+  get foes() { const F = C_().fight; return 'Enemies: the numbered court cards are face up; the face-down one is flipped when you meet it. An enemy starts at ' + D.foeSpec(G, { kind: 'foe', card: { rank: 'J' } }).start + ' and flips blind number cards one at a time. Each time it is above you, add cards from your hand to be level, or stop: you lose the fight and take ' + F.blows.J + ' or ' + F.blows.K + ' damage. Level after its last card is a win: you draw your hand back up. Or pay ' + D.passCost(G) + ' Energy to slip past it (you walk on without a fight).' + (fightCost(G) ? ' ' + fightCost(G) : ''); },
   get fight() { return fightNews(); },   // the first fight: how it goes, with this enemy's numbers
   elite: 'The elite: two court cards. It fights as the stronger: it flips one card more and hits 1 harder; beat it and take its two highest cards.',
   mark: 'A “?” mark: a walk stops on it and you flip a number card. Hearts heal, diamonds give Energy, spades cost damage, clubs cost Energy. 6 to 10 is the big version.',
@@ -4052,7 +4056,7 @@ const NEWS = {
   get toll() { return 'A toll: ' + C_().rooms.toll + ' Energy as you pass. Never paid in Health: without the Energy, walk round.'; },
   get rest() { return 'A rest: +' + D.restHeal(G) + ' Health, for ' + C_().rooms.restSteps + ' steps.'; },
   get altar() { return 'An altar: ' + D.altarCost(G, 'card') + ' Energy buys a hand card, or ' + D.altarCost(G, 'strength') + ' Energy buys +1 strength (most ' + C_().start.maxStrength + ').'; },
-  fountain: 'The fountain: +1 Health, and either +3 Energy or a hand card. One a circle.',
+  fountain: 'The fountain: +1 Health, and your pick of +3 Energy or a hand card. One a circle.',
   light: 'Flask: +3 Energy.', get bait() { return 'Meal: +' + D.baitHeal(G) + ' Health.'; }, get chest() { return 'A chest: +' + D.chestHeal(G) + ' Health and +' + C_().rewards.chest[1] + ' Energy.'; },
   get cerberus() { return 'Cerberus covers the hole. ' + D.bossRules(3, G) + ' Rounds cost no steps.'; },
   get lucifer() { return 'Lucifer covers the hole. ' + D.bossRules(9, G) + ' Then drop through the hole.'; },
@@ -4072,8 +4076,8 @@ function tipsClear() { tipsMem = {}; try { localStorage.removeItem(TKEY); } catc
 // the enemy of the fight in view (a question about it, or the fight itself), or null
 const fightFoe = () => { const fl = G.floor, p = G.pending, at = G.fight ? G.fight.at : p && (p.id === 'foe' || p.id === 'again') ? p.data.at : undefined; return at === undefined ? null : fl.enemies[at] || null; };
 function fightNews() {
-  const e = fightFoe(), s = D.foeSpec(G, e && e.kind !== 'boss' ? e : { kind: 'foe', card: { rank: 'J' } }), pass = D.passCost(G);
-  return 'How a fight works. The enemy has a number: it starts at ' + s.start + (s.die ? ' plus a die roll' : '') + ' and flips ' + nCards(s.k, 'hidden card') + (s.k > 1 ? ', one at a time; each adds its number.' : ', which adds its number.') + ' You have a number too: your strength (' + D.fightBase(G) + '), plus every hand card you play. Whenever the enemy is above you, play hand cards to catch up, or stop: you lose the fight, take ' + s.blows + ' damage, and the cards you played are gone. When its last card is flipped and you are at least as high as it, you win, and your hand fills back up to ' + D.handMax(G) + '. Or pay ' + pass + ' Energy to let it pass' + (G.energy >= pass ? '' : ' (you have only ' + G.energy + ' Energy now)') + ', or choose a walk that goes round it.';
+  const e = fightFoe(), s = D.foeSpec(G, e && e.kind !== 'boss' ? e : { kind: 'foe', card: { rank: 'J' } }), pass = D.passCost(G), dark = D.terrAt(G.floor, G.pos[0], G.pos[1]) === 'dark' ? D.CONFIG.fight.dark : 0;
+  return 'How a fight works. The enemy has a number: it starts at ' + s.start + (s.die ? ' plus a die roll' : '') + ' and flips ' + nCards(s.k, 'hidden card') + (s.k > 1 ? ', one at a time; each adds its number.' : ', which adds its number.') + ' You have a number too: your strength (' + D.fightBase(G) + (dark ? ', which includes +' + dark + ' for standing on a dark square' : '') + '), plus every hand card you play. Whenever the enemy is above you, play hand cards to catch up, or stop: you lose the fight, take ' + s.blows + ' damage, and the cards you played in it are gone, not replaced. When its last card is flipped and you are at least as high as it, you win, and your hand fills back up to ' + D.handMax(G) + '. Or pay ' + pass + ' Energy to let it pass' + (G.energy >= pass ? '' : ' (you have only ' + G.energy + ' Energy now)') + ', or choose a walk that goes round it.';
 }
 function renderNew() {
   const fl = G.floor, have = new Set(['trail', 'steps']);
@@ -4137,8 +4141,9 @@ function youWords(F) {
 function fightLead(F, opts) {
   const reach = (opts || []).some(o => o.cards);   // a way to be level with your hand
   if (F.stage === 'meet') return F.short > 0 ? (F.boss ? 'He' : 'It') + ' starts at ' + F.start + ' and you have ' + F.mine + ', so you must play hand cards worth at least ' + F.short + ' to begin, before it flips anything.' : 'You have as much as its start (' + F.start + '): you play nothing until a flip puts it above you.';
-  if (F.stage === 'again') return F.short > 0 ? 'To beat it you need ' + F.short + ' more than your ' + F.mine + '.' + (reach ? ' Play hand cards worth at least ' + F.short + ',' : ' Your hand cannot reach it;') + (F.canPass ? ' pay ' + F.pass + ' Energy,' : '') + ' or walk round it.' : 'Your ' + F.mine + ' already beats it.';
-  return 'You are ' + F.short + ' short. ' + (reach ? 'Play hand cards worth at least ' + F.short + (F.boss ? ' to win the round, or stop and lose it.' : ' to stay in the fight, or stop.') + (F.boss || !F.left ? '' : ' It then flips ' + (F.left > 1 ? 'its next card' : 'its last card') + '.') : 'Your hand cannot reach it, so ' + (F.buy ? 'buy a card (' + F.buy.price + ' Energy) or stop.' : 'you can only stop.'));
+  if (F.stage === 'again') return F.short > 0 ? 'It has ' + F.its + ' and you have ' + F.mine + ', so you need ' + F.short + ' more (being level is enough).' + (reach ? ' Play hand cards worth at least ' + F.short + ',' : ' Your hand cannot reach it;') + (F.canPass ? ' pay ' + F.pass + ' Energy to slip past it,' : '') + ' or walk round it.' : 'Your ' + F.mine + ' already beats it.';
+  const lose = ', or stop: you lose ' + (F.boss ? 'the round' : 'the fight') + ' and take ' + F.blows + ' damage.';
+  return 'You are ' + F.short + ' short. ' + (reach ? 'Play hand cards worth at least ' + F.short + (F.boss ? ' to win the round' : F.left ? ' to catch up (then it flips ' + (F.left > 1 ? 'its next card' : 'its last card') + ', and may be above you again)' : ' to be level and win') + lose : 'Your hand cannot reach it, so ' + (F.buy ? 'buy a card (' + F.buy.price + ' Energy) or stop' : 'you can only stop') + lose.slice(lose.indexOf(':')));
 }
 // the line under a button: what it does and what happens next
 function fightCaption(F, o) {   // the line under a button: what it does and what happens next
@@ -4149,10 +4154,20 @@ function fightCaption(F, o) {   // the line under a button: what it does and wha
     case 'add': { const sum = rankSum(o.cards), after = F.mine + sum, over = after - F.its; return 'You would have ' + after + ': ' + (over ? over + ' above ' + Obj : 'level') + (F.boss ? ', so you win the round.' : F.left ? '.' : ', and it has no cards left: you win.'); }
     case 'buy': return 'Pay ' + D.CONFIG.fight.buy.price + ' Energy and the top number card of the pile goes into your hand, to play at once or keep.' + (F.buy ? (F.buy.left > 1 ? ' You may buy ' + (F.buy.left - 1) + ' more after this one in this fight.' : ' It is the last you may buy in this fight.') : '');
     case 'stop': return F.boss ? 'Lose the round: take ' + F.blows + ' damage' + lost + '.' : 'Stop and lose this fight: take ' + F.blows + ' damage' + lost + (F.left > 0 ? '. All its hidden cards are turned over, so you see its total' : '') + '. Then you can fight it again with cards that beat it, pay ' + F.pass + ' Energy, or walk round it.';
-    case 'cover': return (F.base + rankSum(o.cards)) + ' against ' + F.its + ': you win and step onto its square.';
+    case 'cover': return 'You would have ' + (F.base + rankSum(o.cards)) + ' against its ' + F.its + ': you win and step onto its square.';
     case 'leave': return 'Walk round it instead: it stays where it is, and you lose no Energy or Health.';
   }
   return '';
+}
+const RANKNAME = { J: 'jack', Q: 'queen', K: 'king', A: 'Fury' }, capital = s => s.charAt(0).toUpperCase() + s.slice(1);
+function foeTitle(F) {   // the enemy in words (its card is drawn beside it), and where the fight stands
+  const e = F.e, who = e.kind === 'elite' ? 'the elite' : e.card ? 'a ' + RANKNAME[e.card.rank] : 'a hidden enemy';
+  return F.stage === 'meet' ? capital(who) + ' blocks your way' : F.stage === 'again' ? capital(who) + ': its total is known' : 'Fighting ' + who;
+}
+function handNote(p) {   // what the cards of your hand do while the fight asks for them: a card that is a whole answer alone is bright, the others are dim (the buttons below play them together)
+  const solo = p.options.filter(o => o.cards && o.cards.length === 1), pairs = p.options.filter(o => o.cards && o.cards.length > 1), dim = G.hand.filter(c => !solo.some(o => o.cards[0].rank === c.rank));
+  if (!solo.length) return pairs.length ? 'No single card reaches it: a button plays two or more together.' : '';
+  return 'Tap a bright card to play it, the same as its button.' + (!dim.length ? '' : dim.some(c => pairs.some(o => o.cards.some(x => x.rank === c.rank))) ? ' A dim card cannot reach it alone: a button plays it together with another.' : ' A dim card is not part of any way to reach it here.');
 }
 function eqRow(who, start, cards, backs, total, tcls, startTitle) {   // one side of the fight as a sum: the number it begins with, the cards added to it, and the total
   const r = document.createElement('div'); r.className = 'frow eq';
@@ -4170,7 +4185,7 @@ function fightPanel(p, F) {
   const e = F.e, box = document.createElement('div'); box.className = 'fight';
   const h = document.createElement('h3'); h.className = 'frow';
   if (!F.boss) (e.kind === 'elite' ? e.cards : [e.card]).forEach(cc => h.appendChild(pcard(cc, 'sm')));
-  h.appendChild(document.createTextNode((F.boss ? e.name : e.kind === 'elite' ? 'The elite' : D.foeName(e)) + (F.boss ? ': ' + F.wins + ' of ' + F.hits + ' rounds won' : ''))); box.appendChild(h);
+  h.appendChild(document.createTextNode(F.boss ? e.name + ': ' + F.wins + ' of ' + F.hits + ' rounds won' : foeTitle(F))); box.appendChild(h);
   const meet = F.stage === 'meet';
   box.appendChild(eqRow(F.boss ? e.name : 'Enemy', F.start + (meet && F.spec.die ? ' + die' : F.die ? ' + ' + F.die : ''), F.turned, F.left, F.its, meet ? '' : F.short > 0 ? 'lose' : '', 'the number it starts at'));
   box.appendChild(para(enemyWords(F), 'fsum'));
@@ -4180,7 +4195,7 @@ function fightPanel(p, F) {
   if (meet) {   // what else the fight costs or does: steps taken from the allowance, a keeper on the hole, no Energy to pay
     const t = [fightCost(G), F.e.keeper ? keeperTail : '', F.canPass ? '' : 'Letting it pass costs ' + F.pass + ' Energy and you have ' + F.energy + ', so you must fight.'].filter(Boolean).join(' ');
     if (t) box.appendChild(para(t, 'fnote'));
-  } else if (p.options.some(o => o.cards && o.cards.length === 1)) box.appendChild(para('Tap a bright card in your hand to play it, or choose below.', 'fnote'));
+  } else { const hn = handNote(p); if (hn) box.appendChild(para(hn, 'fnote')); }
   return box;
 }
 // ---------- How to play, in one minute: opens on a player's first run, and again from the Rules button ----------
@@ -4192,11 +4207,11 @@ function howtoDone() { howtoMem = true; try { localStorage.setItem(HKEY, '1'); }
 function howtoItems() {
   const C = D.CONFIG, k = C.steps.skull, allowed = D.book().pages[D.circleKey(1)].dials.steps, pass = D.passCost(null), hand = C.start.hand;
   return [
-    ['you', 'Walk to the hole.', 'You start in one corner of the page and the hole is in another. Tap or click a dot on the map, or a line in the list under it, to walk there (on a touch screen the first tap shows where it leads and the second walks). The number on the dot is how many steps it takes.'],
-    ['steps', 'Count your steps.', 'Each page allows a number of steps: the first chip at the top says how many (' + allowed + ' on the first circle). Past that, every ' + k + 'th step is a skull and costs 1 Health, and at 0 Health the run ends. Look at the exit before you choose a long way round.'],
+    ['you', 'Walk to the hole.', 'You start in one corner of the page and the hole, the exit, is in another. Tap or click a dot on the map, or a line in the list under it, to walk there (on a touch screen the first tap shows where it leads and the second walks). The number on the dot is how many steps it takes. The list says what each choice costs: its steps, and any Energy or Health on top (fights, gates and tolls).'],
+    ['steps', 'Count your steps.', 'Each page has a step allowance, a number of steps you may take for free: the “Steps allowed” chip says how many (' + allowed + ' on the first circle) and the bar at the top counts them. Past it, ' + skullRule(allowed, 'on the first circle, ') + '. At 0 Health the run ends. Most Health is lost to this clock, so look at the exit before you choose a long way round.'],
     ['trail', 'Never step on your own trail.', 'The shaded squares behind you are your trail, and you cannot walk onto them again. Every choice closes a way behind you.'],
     ['door', 'Doors open one way.', 'A door has a chevron: cross it only the way it points. Every other passage opens both ways. You can never get stuck: from every square there is a way on to the hole.'],
-    ['foe', 'Enemies and your hand.', 'A court card on the map is an enemy. Under the map is your hand of ' + hand + ' number cards. Walk into an enemy and play hand cards to keep level with it, or pay ' + pass + ' Energy to let it pass, or walk round it.' + (C.fight.buy ? ' Short of cards? Pay ' + C.fight.buy.price + ' Energy for a card from the pile, ' + (C.fight.buy.max === 2 ? 'twice' : C.fight.buy.max + ' times') + ' a fight at most.' : '') + ' The first fight explains itself, step by step.'],
+    ['foe', 'Enemies and your hand.', 'A court card on the map is an enemy. Under the map is your hand of ' + hand + ' number cards. Walk into an enemy and play hand cards to keep level with it, or pay ' + pass + ' Energy to slip past it (you walk on without a fight), or walk round it.' + (C.fight.buy ? ' Short of cards? Pay ' + C.fight.buy.price + ' Energy for a card from the pile, ' + (C.fight.buy.max === 2 ? 'twice' : C.fight.buy.max + ' times') + ' a fight at most.' : '') + ' The first fight explains itself, step by step.'],
     ['hole', 'The hole.', 'Step into the hole to go on: you drop onto the next page, and there is no way back up. There are ' + C.circles + ' circles in Inferno, and a boss covers the last hole of each chapter.'],
   ];
 }
@@ -4230,13 +4245,13 @@ function fightExample() {
 }
 function fightCardLead() {
   const C = D.CONFIG, F = C.fight, c1 = D.book().pages[D.circleKey(1)].dials.base, c9 = D.book().pages[D.circleKey(C.circles)].dials.base, damage = [...new Set([F.blows.J, F.blows.Q, F.blows.K])].sort((a, b) => a - b);
-  return 'An enemy is a number that grows. It starts at its page’s number (' + c1 + ' on the first circle, ' + c9 + ' on the last) and flips face-down number cards one at a time: a jack flips ' + nCards(F.cards.J) + ', a queen ' + F.cards.Q + ', a king ' + F.cards.K + '. Each card adds its number to the enemy. Your number is your strength plus the hand cards you play. Whenever the enemy is above you, play hand cards until you are level with it, or stop: you lose the fight, take its damage (' + damage.join(' or ') + ') and the cards you played are gone. If you are level after its last card you win, and your hand fills back up to ' + C.start.hand + '. Before it flips anything you may pay ' + D.passCost(null) + ' Energy to let it pass.';
+  return 'An enemy is a number that grows. It starts at its page’s number (' + c1 + ' on the first circle, ' + c9 + ' on the last) and flips face-down number cards one at a time: a jack flips ' + nCards(F.cards.J) + ', a queen ' + F.cards.Q + ', a king ' + F.cards.K + '. Each card adds its number to the enemy. Your number is your strength plus the hand cards you play. Whenever the enemy is above you, play hand cards until you are level with it, or stop: you lose the fight, take its damage (' + damage.join(' or ') + ') and the cards you played are gone. If you are level after its last card you win, and your hand fills back up to ' + C.start.hand + '. Before the fight starts, or again after a loss, you may pay ' + D.passCost(null) + ' Energy to slip past it: no fight, and you walk on.';
 }
 function fillFightCard() {
   const lead = $('#card-fight-lead'), list = $('#card-fight-example'); if (!lead || !list) return;
   lead.textContent = fightCardLead(); list.innerHTML = '';
   const X = fightExample(), li = t => { const n = document.createElement('li'); n.textContent = t; list.appendChild(n); };
-  li('The setup. A queen waits on the first circle: it starts at ' + X.start + ' and flips ' + nCards(X.k) + '. You have strength ' + X.strength + ' and the hand ' + X.hand.join(', ') + '. You step into it and choose Fight it (the other choice is to pay ' + X.pass + ' Energy and let it pass).');
+  li('The setup. A queen waits on the first circle: it starts at ' + X.start + ' and flips ' + nCards(X.k) + '. You have strength ' + X.strength + ' and the hand ' + X.hand.join(', ') + '. You step into it and choose Fight it (the other choice, Let it pass, is to pay ' + X.pass + ' Energy and slip past it).');
   X.steps.forEach(li);
   const B = D.CONFIG.fight.buy, buyLine = B ? ' Short of cards? While a fight is on, you may pay ' + B.price + ' Energy to draw the top number card of the pile into your hand, ' + (B.max === 1 ? 'once' : B.max === 2 ? 'twice' : B.max + ' times') + ' a fight at most, and play it.' : '';
   const aft = $('#card-fight-after'); if (aft) aft.textContent = 'Had you stopped instead of playing, you would have lost the fight: ' + X.blows + ' damage, and the cards you had played would be gone (a loss draws nothing back). Its hidden cards turn over, so you see its total, and you may fight it again with cards that beat it, pay ' + X.pass + ' Energy, or walk round it.' + buyLine;
@@ -4389,12 +4404,12 @@ function drawTerrain(svg, fl, t, x, y) {
 }
 const ROOM_TEXT = { fountain: () => 'the fountain (+1 Health, and your pick of +3 Energy or a hand card)', bait: () => 'a Meal (+' + D.baitHeal(G) + ' Health)', light: () => 'a Flask (+' + D.CONFIG.rewards.light + ' Energy)', chest: () => 'a chest (+' + D.chestHeal(G) + ' Health, +' + D.CONFIG.rewards.chest[1] + ' Energy)', rest: () => 'a rest (+' + D.restHeal(G) + ' Health, for ' + D.CONFIG.rooms.restSteps + ' steps)', altar: () => 'an altar (Energy buys a hand card or +1 strength)' };
 // where a walk leads, in plain words: the exit's distance from there, the steps that would be left, and a way that is fixed for a while (a spur: you cannot turn off it)
-function leadText(o) {   // where a walk leads, in plain words: the exit's distance from there, whether you would arrive with steps to spare or too many, what the skulls would cost, and a way that is fixed for a while
+function leadText(o) {   // where a walk leads, in plain words: the exit's distance from there, the step you would reach it on, what the skulls would cost or how many steps would still be free before the next, and a way that is fixed for a while
   const ex = D.exitInfo(G, o); if (!ex) return '';
-  const fl = G.floor, A = D.allowance(G), k = D.CONFIG.steps.skull, used = fl.steps, on = ex.toExit + ' step' + (ex.toExit === 1 ? '' : 's'), fixed = ex.fixed >= 3 ? ' The way is fixed for ' + ex.fixed + ' steps: you cannot turn off it.' : '';
+  const fl = G.floor, A = D.allowance(G), k = D.CONFIG.steps.skull, used = fl.steps, on = ex.toExit + ' step' + (ex.toExit === 1 ? '' : 's'), fixed = ex.fixed >= 3 ? ' From there the way has no side turns for ' + ex.fixed + ' steps.' : '';
   if (fl.clockStopped) return 'From there the exit is ' + on + ' on by the shortest way (the step clock has stopped).' + fixed;
-  const sk = (from, to) => Math.floor(Math.max(0, to - A) / k) - Math.floor(Math.max(0, from - A) / k), ahead = sk(used, A - ex.left), over = Math.max(0, -ex.left), paid = Math.floor(Math.max(0, used - A) / k) > 0;
-  return 'From there the exit is ' + on + ' on by the shortest way: ' + (ex.left >= 0 ? 'you would have ' + (ex.left === 0 ? 'no steps' : stepsText(ex.left)) + ' to spare: no skull.' : 'you would be ' + stepsText(over) + ' over the allowance, ' + (ahead > 0 ? 'which costs ' + skullsText(ahead) + '.' : paid ? 'but that adds no new skull.' : 'but the first ' + (k - 1) + ' steps over are free: no skull.')) + fixed;
+  const sk = (from, to) => Math.floor(Math.max(0, to - A) / k) - Math.floor(Math.max(0, from - A) / k), arrive = A - ex.left, ahead = sk(used, arrive), spare = A + k * (Math.floor(Math.max(0, arrive - A) / k) + 1) - 1 - arrive;
+  return 'From there the exit is ' + on + ' on by the shortest way, so you would reach it on step ' + arrive + (arrive > A ? ', ' + stepsText(arrive - A) + ' past the allowance' : '') + ': ' + (ahead > 0 ? 'that costs ' + skullsText(ahead) + '.' : 'no skull, and you would have ' + (spare > 0 ? stepsText(spare) : 'no steps') + ' to spare before the next one.') + fixed;
 }
 function describe(o) {
   const fl = G.floor, R = D.CONFIG.rooms;
@@ -4425,12 +4440,12 @@ function describe(o) {
 // past it). wayFacts reads those and the step clock into plain data; wayWords turns it into the line a way gets in the list under the maze: its steps, what it stops at, what it costs, and how it leaves you for the exit.
 const SKULL = '☠';
 const skullsText = n => (n > 1 ? n + ' skulls' : 'a skull') + ' (\u2212' + n + ' Health)';   // "a skull (−1 Health)", "3 skulls (−3 Health)"
-function clockWords(G) {   // the skull clock as arithmetic: the steps left of the allowance, plus the 3 free ones past it, make the steps that are safe; the next one is a skull, then every 4th
+function clockWords(G) {   // the skull clock as arithmetic, in one line (a phone's first screen has little room): the steps left of the allowance, plus the 3 free ones past it, make the steps that are safe; the next one is a skull
   const fl = G.floor, A = D.allowance(G), k = D.CONFIG.steps.skull, used = fl.steps;
   if (fl.clockStopped) return 'The step clock has stopped: the boss is the last thing on this page.';
   const left = A - used, over = Math.max(0, used - A), next = A + k * (Math.floor(over / k) + 1) - used;
-  if (over > 0) return 'Past the allowance: ' + (next > 1 ? stepsText(next - 1) + ' before the next skull' : 'the next step is a skull') + ' (\u22121 Health), then every ' + k + 'th step.';
-  return (left > 0 ? stepsText(left) + ' left' : 'No steps left') + ', +' + (k - 1) + ' free = ' + (left + k - 1) + ' before the first skull (\u22121 Health), then every ' + k + 'th step.';
+  if (over > 0) return 'Past the allowance: ' + (next > 1 ? stepsText(next - 1) + ' before a skull' : 'the next step is a skull') + ' (\u22121 Health).';
+  return (left > 0 ? stepsText(left) + ' left' : 'No steps left') + ', +' + (k - 1) + ' free = ' + (left + k - 1) + ' before a skull (\u22121 Health).';
 }
 const ROOM_SHORT = { fountain: () => 'the fountain', bait: G => 'a Meal (+' + D.baitHeal(G) + ' Health)', light: () => 'a Flask (+' + D.CONFIG.rewards.light + ' Energy)', chest: G => 'a chest (+' + D.chestHeal(G) + ' Health, +' + D.CONFIG.rewards.chest[1] + ' Energy)', rest: G => 'a rest (+' + D.restHeal(G) + ' Health, ' + D.CONFIG.rooms.restSteps + ' steps)', altar: () => 'an altar' };
 function wayFacts(G, o) {
@@ -4443,8 +4458,8 @@ function wayFacts(G, o) {
   if (o.tolls) W.prices.push('toll: ' + R.toll * o.tolls + ' Energy');
   if (o.hp) W.prices.push(o.hp + ' Health on the way');
   W.head = wayHead(G, W);
-  const ex = D.exitInfo(G, o);
-  if (ex) { const atExit = A - ex.left; W.exit = { toExit: ex.toExit, left: ex.left, skulls: skulls(used, atExit), fixed: ex.fixed }; W.tone = ex.left >= 0 ? 'ok' : W.exit.skulls > 0 ? 'bad' : 'tight'; }
+  const ex = D.exitInfo(G, o);   // (spare, below: the steps still free after you arrive, before the next skull)
+  if (ex) { const atExit = A - ex.left, nextSkull = A + k * (Math.floor(Math.max(0, atExit - A) / k) + 1); W.exit = { toExit: ex.toExit, left: ex.left, skulls: skulls(used, atExit), spare: nextSkull - 1 - atExit, fixed: ex.fixed }; W.tone = ex.left >= 0 ? 'ok' : W.exit.skulls > 0 ? 'bad' : 'tight'; }
   return W;
 }
 function wayHead(G, W) {   // what the way is: where it stops, in a few words
@@ -4456,11 +4471,10 @@ function wayHead(G, W) {   // what the way is: where it stops, in a few words
   const t = D.roomAt(G, fl, o.end[0], o.end[1]);
   return t ? ROOM_SHORT[t](G) : W.kind === 'ride' ? 'a bubble: it carries you on, free' : 'the next fork';
 }
-function wayExit(W) {   // how the way leaves you for the exit: its distance, and whether you arrive with steps to spare or too many (and the skulls that costs)
+function wayExit(W) {   // how the way leaves you for the exit: the step you would reach it on (the count "Steps 2 / 36" is on), then the skulls that costs, or none and how many steps would still be free before the next one
   const x = W.exit; if (!x) return '';
-  const on = W.kind === 'fall' ? 'This is the exit' : 'Exit is ' + stepsText(x.toExit) + ' on';
-  if (W.stopped) return on;
-  return on + ': ' + (x.left > 0 ? stepsText(x.left) + ' to spare, no skull' : x.left === 0 ? 'no steps to spare, no skull' : x.skulls > 0 ? stepsText(-x.left) + ' too many: ' + skullsText(x.skulls) : stepsText(-x.left) + ' too many, but free (no skull)');
+  if (W.stopped) return W.kind === 'fall' ? 'This is the exit' : 'Exit is ' + stepsText(x.toExit) + ' on';   // the clock has stopped: there is no step to name
+  return 'Exit on step ' + (W.allowance - x.left) + ': ' + (x.skulls > 0 ? skullsText(x.skulls) : 'no skull, ' + (x.spare > 0 ? stepsText(x.spare) : 'no steps') + ' to spare');
 }
 function wayWords(W) {   // the pieces of a row: [steps, head, price (cost on the way, if any), exit]
   const price = W.prices.concat(W.skulls > 0 ? [skullsText(W.skulls)] : []);
