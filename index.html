@@ -211,6 +211,19 @@ button.pcard:disabled { cursor: default; opacity: 1; }
 .frow .total.lose { color: var(--bad); } .frow .total.ok { color: var(--good); }
 .fnote { margin: 0; color: var(--muted); font-size: 14px; }
 .fcmd { display: flex; flex-wrap: wrap; gap: 8px; }
+/* a fight in everyday words: each side as a sum (the number it begins with, the cards added, the total), a sentence under each, one line on where you stand, and a line under every button saying what it does */
+.fight { gap: 8px; }
+.frow.eq { gap: 6px; align-items: center; }
+.frow.eq .who { flex: 0 0 100%; min-width: 0; font: 700 12px var(--ui); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.badge { display: inline-grid; place-items: center; min-width: 34px; height: 34px; padding: 0 7px; border: 2px solid var(--ink); border-radius: 17px; background: var(--paper); color: var(--ink); font: 800 17px var(--ui); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.op { color: var(--muted); font-weight: 700; }
+.fsum { margin: 0; font-size: 14px; line-height: 1.4; color: var(--text); }
+.fnote.lead { color: var(--text); font-size: 15px; font-weight: 600; line-height: 1.4; }
+.fcmd.captioned { display: grid; gap: 8px; }
+.fcmd button.two { display: grid; gap: 2px; text-align: left; padding: 9px 14px; }
+.fcmd button.two .bl { font-weight: 700; }
+.fcmd button.two .cap { font-size: 13px; line-height: 1.35; font-weight: 400; color: var(--muted); }
+.fcmd button.primary.two .cap { color: color-mix(in srgb, var(--paper) 84%, transparent); }
 .steps-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 0; }
 .legend { margin: 2px 0 0; font-size: 12px; }
 @media (max-width: 520px) { .pcard { width: 46px; height: 66px; font-size: 20px; } .pcard small { font-size: 20px; } .pcard.court { width: 50px; height: 72px; } header { padding-top: 12px; } .sub { font-size: 16px; } #new-run { padding: 9px 14px; } }
@@ -235,10 +248,11 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
 .card-bg { fill: var(--paper); stroke: var(--line); }
 .rest { columns: 2 330px; column-gap: 34px; }
 .rest p, .rest li { font-size: 15px; } .rest ul { padding-left: 18px; margin: 4px 0 10px; } .rest h3 { break-after: avoid; }
+.rest ol.example { padding-left: 22px; margin: 4px 0 8px; } .rest ol.example li { margin: 2px 0; } .rest .example-h { margin: 6px 0 0; break-after: avoid; }
 .rest table { border-collapse: collapse; font-size: 14px; margin: 4px 0 10px; break-inside: avoid; }
 .rest td, .rest th { border-bottom: 1px solid var(--line); padding: 3px 12px 3px 0; text-align: left; }
 @media print {
-  header, main, .card-head button, .card-head a { display: none !important; }
+  header, main, .howto, .card-head button, .card-head a { display: none !important; }
   body { background: #fff; color: #000; }
   .solid, .wall, .enemy .body, .enemy .sign, .chest, .grid { filter: none !important; }
   *, *::before, *::after { animation: none !important; }
@@ -316,6 +330,78 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
 .foe .keeper { color: var(--ink); font-weight: 700; }
 .keep-t { fill: var(--ink); font: 700 12px var(--ui); text-anchor: middle; paint-order: stroke; stroke: var(--paper); stroke-width: 4px; pointer-events: none; }
 
+/* How to play, in one minute: a sheet over the page on a player's first run and again from the Rules button; a phone shows it full width, a wide screen as a card in the middle */
+.howto { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 30; display: grid; place-items: start center; overflow-y: auto; overscroll-behavior: contain; padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px)); background: color-mix(in srgb, var(--paper) 90%, transparent); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.howto[hidden] { display: none; }
+.howto-card { width: 100%; max-width: 640px; margin: auto; padding: 16px 18px 18px; background: var(--sheet); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 50px -20px var(--shade); }
+.howto-card h2 { outline: none; margin: 0 0 4px; font: 700 24px/1.15 var(--book); color: var(--ink); }
+.howto-lead { margin: 0 0 12px; color: var(--muted); }
+.howto-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.howto-list li { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 12px; align-items: start; }
+.howto-list svg { width: 46px; height: 46px; }
+.howto-list b { display: block; font-size: 17px; line-height: 1.25; color: var(--ink); }
+.howto-list p { margin: 2px 0 0; font-size: 15px; line-height: 1.4; }
+.howto-go { position: sticky; bottom: 0; margin: 14px -18px -18px; padding: 10px 18px 14px; align-items: center; background: var(--sheet); border-top: 1px solid var(--line); border-radius: 0 0 14px 14px; }   /* the way out stays in view, however long the sheet is on a small screen */
+.hw-box { fill: none; stroke: var(--ink); stroke-width: 2; } .hw-box.on { fill: var(--ink); } .hw-box.over { stroke: var(--bad); } .hw-skull { fill: var(--bad); font: 700 13px var(--ui); text-anchor: middle; }
+/* what each way costs, at every stop: a row for every walk under the maze (its steps, what it stops at, what it costs, and how it leaves you for the exit) */
+.ways { margin: 8px 0 0; }
+.ways[hidden] { display: none; }
+.ways-h { margin: 0; font: 700 16px/1.3 var(--book); color: var(--ink); }
+.ways-clock { margin: 0 0 5px; font-size: 13px; line-height: 1.35; color: var(--muted); }
+.ways-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.way { display: flex; flex-wrap: wrap; align-items: baseline; gap: 1px 8px; width: 100%; padding: 6px 10px; text-align: left; font-size: 14px; line-height: 1.3; border-radius: 10px; }
+.way .wn { flex: 0 0 auto; display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 3px; border: 2px solid var(--ov); border-radius: 12px; background: color-mix(in srgb, var(--ov) 14%, var(--paper)); font: 800 12px var(--ui); font-variant-numeric: tabular-nums; align-self: center; }
+.way.fight .wn { border-color: var(--bad); background: var(--sheet); } .way.fall .wn { border-color: var(--gold); background: none; border-width: 3px; } .way .wn:empty { display: none; }
+.way .wt { flex: 1 1 auto; min-width: 0; }
+.way .wx { flex: 0 0 auto; margin-left: auto; text-align: right; color: var(--muted); font-size: 13px; white-space: nowrap; }
+.way.picked { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+/* the status line keeps its old look on a wide screen (its three parts sit in the one wrapping row); the Steps part and the skull clock are for the narrow layout below, where the step track is further down the page */
+.status-line { display: contents; }
+.steps-stat { display: none; }
+/* A narrow screen (a phone, a tablet upright, a small window): one column, ordered by what the player does next. The status bar (Health, Energy, Strength, Steps and the skull clock) stays in view while the page scrolls; the board comes first with
+   its next action right under it, then the hand; while a fight is on its panel and the hand come first, because the maze is not needed to fight; the page's rules, the tips and the rest come after. #cols and its two columns dissolve
+   (display: contents) so every part of the page can be ordered in one list; the wide layout (1240px and up) is untouched. */
+@media (max-width: 1239px) {
+  #game:not([hidden]) { display: flex; flex-direction: column; padding-top: 6px; }
+  #cols, #col-side, #col-side.ended, #col-board, #pagehead { display: contents; }
+  .status { order: -2; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1px 14px; margin: 0 0 4px; padding: 3px 0 2px; background: var(--sheet); border-bottom: 1px solid var(--line); }
+  .status .stat { min-width: 0; } .stat .l { line-height: 1.2; } .stat .l b { font-size: 16px; } .bar { height: 5px; margin-top: 1px; } .status .small-stat { line-height: 1.25; }
+  .status-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 14px; grid-column: 1 / -1; }
+  .steps-stat { display: inline; } .steps-stat b { color: var(--text); font-size: 16px; font-variant-numeric: tabular-nums; }
+  .skull-line { white-space: nowrap; color: var(--muted); } .skull-line.near { color: var(--bad); font-weight: 700; }
+  #leave { order: -1; }
+  #notice { order: 0; font-size: 13px; line-height: 1.35; padding: 5px 9px; margin: 0 0 4px; }
+  #page-title { order: 1; font-size: 16px; margin: 2px 0 0; }
+  #page-chips { order: 1; margin: 3px 0 0; gap: 3px; } .chips .chip2.rule { order: 2; }
+  .board-wrap { order: 2; margin: 4px -6px 0; }
+  #board { max-height: max(240px, calc(100vh - 360px)); max-height: max(240px, calc(100svh - 360px)); }
+  #ways { order: 3; }
+  #hint { order: 3; margin: 4px 0 0; font-size: 14px; line-height: 1.4; } #hint:empty { display: none; }
+  #prompt { order: 3; margin: 8px 0 0; }
+  .hand-row { order: 4; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; margin: 8px 0 2px; }
+  .hand-row .lab { margin: 0; } #hand { grid-column: 1 / -1; } #hand-n { grid-column: 2; grid-row: 1; margin: 0; }
+  #new { order: 5; margin: 8px 0 0; font-size: 15px; line-height: 1.4; padding: 8px 12px; }
+  #foes-strip { order: 6; }
+  #grids { order: 7; }
+  #col-side.ended #prompt { scroll-margin-top: 66px; } #prompt { scroll-margin-top: 66px; }
+  .steps-row { order: 8; }
+  .exam { order: 9; margin: 6px 0 0; }
+  #page-meta { order: 10; }
+  .legend { order: 11; }
+  /* the question on the table comes before everything but the status bar: a fight with its one-time card, and the hand beside it; a door to choose comes with its question */
+  #game.fighting #new[data-k="fight"] { order: -1; margin: 0 0 8px; }
+  #game.fighting #prompt, #game.fighting .hand-row { order: -1; }
+  #game.fighting .hand-row { order: 0; }
+  #game.asking #grids.choosing { order: -1; }
+  .chip2 { font-size: 13px; line-height: 1.35; padding: 0 8px; } .chip2 b { font-size: 14px; }
+  .chips .chip2.rule { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; max-width: 100%; border-radius: 12px; cursor: pointer; }
+  .chips .chip2.rule.open { -webkit-line-clamp: unset; }
+  .chips .chip2.rule.skull-rule { display: none; }   /* the skull rule is said by the status bar and the list of ways */
+  header { padding-top: 8px; padding-bottom: 2px; gap: 0 14px; align-items: center; }
+  h1 { font-size: 22px; }
+  .run { gap: 6px; } .run button, .run a.btn, #new-run { padding: 6px 10px; font-size: 14px; } .more summary { padding: 6px 2px; font-size: 14px; }
+  body:has(#game:not([hidden])) .sub { display: none; }
+}
 </style>
 </head>
 <body>
@@ -376,10 +462,13 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
     <div class="status">
       <div class="stat"><div class="l"><span>Health</span><span><b id="health"></b> <span id="health-max"></span></span></div><div class="bar"><i id="health-bar"></i></div></div>
       <div class="stat"><div class="l"><span>Energy</span><span><b id="energy"></b> <span id="energy-max"></span></span></div><div class="bar"><i id="energy-bar"></i></div></div>
-      <span class="small-stat">Strength <b id="strength"></b></span>
-      <span class="small-stat" id="sacks-box" hidden>Gold <b id="sacks"></b></span>
-      <div class="small-stat exam" id="exam" role="group" aria-label="Saint Peter asks" hidden><span class="exam-h" id="exam-h"></span><ul class="exam-chips" id="exam-chips" role="list"></ul><p class="exam-advice" id="exam-advice" hidden></p></div>
+      <div class="status-line">
+        <span class="small-stat">Strength <b id="strength"></b></span>
+        <span class="small-stat" id="sacks-box" hidden>Gold <b id="sacks"></b></span>
+        <span class="small-stat steps-stat" id="steps-stat">Steps <b id="steps-used"></b> <span id="steps-max"></span> <span class="skull-line" id="steps-skull"></span></span>
+      </div>
     </div>
+    <div class="small-stat exam" id="exam" role="group" aria-label="Saint Peter asks" hidden><span class="exam-h" id="exam-h"></span><ul class="exam-chips" id="exam-chips" role="list"></ul><p class="exam-advice" id="exam-advice" hidden></p></div>
     <p class="small-stat steps-row">Steps <span id="rolls"></span></p>
     <div class="hand-row"><span class="lab">Your hand</span><div id="hand" aria-label="Your hand cards"></div><span id="hand-n"></span></div>
     <div id="foes-strip"><span class="lab">Enemies here</span><div id="foes"></div></div>
@@ -389,6 +478,7 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
     </div>
     <div id="col-board">
     <div class="board-wrap"><svg id="board" role="group" aria-label="The page you are on"></svg></div>
+    <div id="ways" class="ways" hidden><p class="ways-h" id="ways-h"></p><p class="ways-clock" id="ways-clock"></p><ul class="ways-list" id="ways-list"></ul></div>
     <p id="hint"></p>
     <p class="small-stat legend">The violet walls, doors and your shaded trail are the clear sheets laid over the page. Never step onto your trail.</p>
     </div>
@@ -440,7 +530,11 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
     <h3>Crossroads and signposts</h3>
     <p>Every maze sheet has two crossroads: a <b>fast</b> way (a few squares, guarded by a gate, a toll or a hidden enemy), a <b>rich</b> way (a few squares longer, through the room sheet’s rooms) and a <b>safe</b> way (the longest, with nothing on it). Other forks are signposted: a reward on the longer way, a risk or a price on the shorter. Choose with your hand and your steps in mind.</p>
     <h3>The fight</h3>
-    <p>Move into an enemy: fight, or pay 4 Energy to let it pass. Pay before it flips its first card; you can never pay a shortfall in Health, so without 4 Energy you fight or walk round. Its total starts at the page’s number; it flips number cards one at a time. After each, if it is above you (hand cards you have played, plus strength, plus 1 if you started from the dark), add hand cards until you are level, or stop: you lose and take its damage. Level after its last card is a win: you draw back up to 5 (an elite also gives its two highest cards, and your lowest goes if you hold more than 5). The cards you played are replaced from the pile, so your hand is full again but not always stronger. After a loss its total is known: fight again with cards that beat it, pay 4 Energy, or walk round. Against a boss who fights you may always swing blind instead of committing cards: the top number card counts for you. Some bosses allow an Energy flip; see the boss list.</p>
+    <p id="card-fight-lead"></p>
+    <p class="example-h"><b>One fight, step by step</b></p>
+    <ol id="card-fight-example" class="example"></ol>
+    <p id="card-fight-after"></p>
+    <p><b>The details.</b> Move into an enemy: fight, or pay 4 Energy to let it pass. Pay before it flips its first card; you can never pay a shortfall in Health, so without 4 Energy you fight or walk round. Its total starts at the page’s number; it flips number cards one at a time. After each, if it is above you (hand cards you have played, plus strength, plus 1 if you started from the dark), add hand cards until you are level, or stop: you lose and take its damage. Level after its last card is a win: you draw back up to 5 (an elite also gives its two highest cards, and your lowest goes if you hold more than 5). The cards you played are replaced from the pile, so your hand is full again but not always stronger. After a loss its total is known: fight again with cards that beat it, pay 4 Energy, or walk round. Against a boss who fights you may always swing blind instead of committing cards: the top number card counts for you. Some bosses allow an Energy flip; see the boss list.</p>
     <h3>The bosses</h3>
     <ul id="card-bosses"></ul>
     <h3>Chapter 1, Inferno: the circles and their terrain</h3>
@@ -477,6 +571,14 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
     <p>Commedia runs entirely in your browser: no account, nothing is sent anywhere, and once this page has loaded it needs no connection. A run you leave is kept on this device, in this browser; clearing the browser’s site data erases it, and the Ledger with it.</p>
     <p id="install-tip" hidden>To keep it on this device and play offline: on an iPhone or iPad, Share, then Add to Home Screen; on Android, the browser menu, then Install app (or Add to Home screen). After that it opens like an app, with no connection.</p>
     <p id="download-tip" hidden>On a computer you can also download it as one file that plays with no internet: <a href="Commedia.zip" download>Commedia.zip</a>. Unzip it and open Commedia.html. (A phone or tablet cannot open a loose file: use Add to Home Screen above.)</p>
+  </div>
+</section>
+<section id="howto" class="howto" role="dialog" aria-modal="true" aria-labelledby="howto-h" hidden>
+  <div class="howto-card">
+    <h2 id="howto-h" tabindex="-1">How to play, in one minute</h2>
+    <p class="howto-lead" id="howto-lead"></p>
+    <ol class="howto-list" id="howto-list"></ol>
+    <div class="row howto-go"><button type="button" id="howto-start" class="primary">Start playing</button><a class="btn" id="howto-rules" href="#rules">Read the full rules card</a></div>
   </div>
 </section>
 <footer class="legal">
@@ -3646,6 +3748,7 @@ function begin(note) {
   if (!prac) { try { run = D.ledgerRun(LEDGER, build, entry === 'normal' ? pick.offer || null : null, entry, heat); } catch (e) { run = { build, offer: null }; if (heat.length) note = (note ? note + ' ' : '') + 'Heat was not taken: ' + e.message + '.'; heat = []; } }
   else if (heat.length) { const why = D.Heat.problem(heat, build); if (why) { note = (note ? note + ' ' : '') + 'Heat was not taken: ' + why + '.'; heat = []; } }
   start(newSeed(), prac, run, build, entry, note, heat);
+  if (!howtoSeen()) openHowto();   // a player's first run opens How to play over it (the Rules button opens it again)
 }
 function start(seed, practice, run, build, entry, note, heat) {
   stopBot(); const eng = { entry: entry || (run && run.entry) || 'normal' }; if (run && run.offer) eng.offer = run.offer; if (heat && heat.length) eng.heat = heat.slice();   // (the saved run carries its Heat, so a reload replays it)
@@ -3711,7 +3814,7 @@ function renderLedger() {
   for (const [name, f] of groups) { const bs = C.boxes.filter(f); if (!bs.length) continue; const t = document.createElement('p'); t.className = 'bxh'; t.textContent = name; box.appendChild(t);
     const ul2 = document.createElement('ul'); for (const x of bs) { const li = document.createElement('li'), on = !!L.boxes[x.id]; li.className = on ? 'done' : ''; li.innerHTML = '<span class="bx" aria-hidden="true"></span><span class="sr"></span><span class="bt"></span>'; li.querySelector('.bx').textContent = on ? '\u2611' : '\u2610'; li.querySelector('.sr').textContent = on ? 'Done: ' : 'Not yet: '; li.querySelector('.sr').className = 'sr'; li.querySelector('.bt').textContent = x.text + (x.opens ? ' (opens ' + D.CONFIG.builds[x.opens].name + ')' : '') + (x.opensEntry ? ' (opens ' + ENTRY_TEXT[x.opensEntry][0] + ')' : ''); ul2.appendChild(li); } box.appendChild(ul2); }
   const r = document.createElement('button'); r.type = 'button'; r.className = 'reset quiet'; r.textContent = 'Wipe the Ledger';
-  r.addEventListener('click', () => { if (r.dataset.sure) { LEDGER = D.ledgerNew(); saveLedger(LEDGER); renderLedger(); refreshBuilds(); return; } r.dataset.sure = '1'; r.textContent = 'Really wipe it? Press again.'; });
+  r.addEventListener('click', () => { if (r.dataset.sure) { LEDGER = D.ledgerNew(); saveLedger(LEDGER); tipsClear(); howtoMem = false; try { localStorage.removeItem(HKEY); } catch (e) { /* no storage */ } renderLedger(); refreshBuilds(); return; } r.dataset.sure = '1'; r.textContent = 'Really wipe it? Press again.'; });
   box.appendChild(r);
 }
 function render() {
@@ -3866,7 +3969,7 @@ function renderTop() {
   if (lvl && lvl.kind === 'paradise') title += lvl.door ? ' \u00b7 the door of ' + lvl.door.name : ' \u00b7 choose a door';
   $('#page-title').textContent = title;
   const ch = $('#page-chips'); ch.innerHTML = '';
-  chipEl(ch, 'Steps allowed', A); if (!fl.clockStopped) chipEl(ch, 'Past it, every ' + D.CONFIG.steps.skull + 'th step costs 1 Health', undefined, 'rule'); chipEl(ch, 'Enemies start at', dl.base + D.mod(G, 'foeStart') + D.mod(G, 'foeStart', fl.level));
+  chipEl(ch, 'Steps allowed', A); if (!fl.clockStopped) chipEl(ch, 'Past it, every ' + D.CONFIG.steps.skull + 'th step costs 1 Health', undefined, 'rule skull-rule'); chipEl(ch, 'Enemies start at', dl.base + D.mod(G, 'foeStart') + D.mod(G, 'foeStart', fl.level));
   if (G.heat && G.heat.length) { chipEl(ch, 'Heat', D.Heat.total(G.heat) + (G.heatLifted ? ', lifted' : '')); chipEl(ch, 'Burdens: ' + G.heat.map(id => D.CONFIG.heat.ticks[id].name).join(', ') + (G.heatLifted ? '. Lifted at the chapter break.' : '. They last through chapter 1.'), undefined, 'rule'); }
   if (fl.event) chipEl(ch, 'Smoke die ' + fl.event.roll + ':', (fl.event.steps > 0 ? '+' : fl.event.steps < 0 ? '\u2212' : '\u00b1') + Math.abs(fl.event.steps) + ' steps');
   if (pg.tile) { chipEl(ch, 'Enemy places', dl.spots + (dl.hidden ? ' (' + dl.hidden + ' hidden)' : '')); if (dl.kings !== undefined && dl.kings < 3) chipEl(ch, 'Kings', dl.kings ? 'at most ' + dl.kings : 'none'); if (dl.blows) chipEl(ch, 'Enemies hit', dl.blows + ' harder'); }
@@ -3886,6 +3989,10 @@ function renderTop() {
   const left = A - used, next = A + k * (Math.floor(Math.max(0, used - A) / k) + 1) - used, pl = n => n + ' step' + (n === 1 ? '' : 's');
   const t = document.createElement('small'); t.className = !fl.clockStopped && left <= k ? 'near' : '';   // the clock is said from the first step, and shouts in the last few before the skulls
   t.textContent = fl.clockStopped ? 'the step clock has stopped: the boss is the last thing on this page' : used + ' of ' + A + (left > 0 ? ': ' + pl(left) + ' left, then every ' + k + 'th step is a skull (−1 Health)' : ': past it, every ' + k + 'th step is a skull (−1 Health), the next in ' + pl(next)); box.appendChild(t);
+  // the same clock in the status bar (a narrow screen keeps it in view): the steps used, and the skull coming up: −1 Health, in so many steps
+  $('#steps-used').textContent = used; $('#steps-max').textContent = '/ ' + A;
+  const sk = $('#steps-skull'); sk.textContent = fl.clockStopped ? '(clock stopped)' : '\u2620 \u22121 in ' + next; sk.className = 'skull-line' + (!fl.clockStopped && left <= k ? ' near' : '');
+  $('#steps-stat').title = fl.clockStopped ? 'The step clock has stopped: the boss is the last thing on this page.' : 'Steps used on this page, of ' + A + '. The next skull (−1 Health) comes in ' + pl(next) + ', then every ' + k + 'th step.';
 }
 // Saint Peter's tally beside your numbers, on every Paradise page (the door you take and what you do on his page are decisions about it); nothing when there is no exam or the page is not in Paradise
 function renderExam() {
@@ -3922,6 +4029,7 @@ const NEWS = {
   get steps() { return 'This page allows ' + D.allowance(G) + ' steps (its header says so). Past that, every ' + C_().steps.skull + 'th step is a skull on the step track: −1 Health.'; },
   get smoke() { const E = Object.assign({}, C_().event, G && G.heatEvent || {}), st = E.steps, f = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v); const eq = [...new Set(st)].sort((a, b) => a - b).map(v => st.map((x, i) => x === v ? i + 1 : 0).filter(Boolean).join(' or ') + ': ' + (v ? f(v) + ' steps' : 'nothing')); return 'The smoke die: every page from circle ' + E.from + ' to ' + E.to + ' rolls one more die when it is set up. ' + eq.join(', ') + '. The header already counts it.'; },
   get foes() { const F = C_().fight; return 'Enemies: the numbered court cards are face up; the face-down one is flipped when you meet it. An enemy starts at ' + D.foeSpec(G, { kind: 'foe', card: { rank: 'J' } }).start + ' and flips blind number cards one at a time. Each time it is above you, add cards from your hand to be level, or stop and lose (' + F.blows.J + ' or ' + F.blows.K + ' damage). Level after its last card is a win: you draw your hand back up. Or pay ' + D.passCost(G) + ' Energy to let it pass.' + (fightCost(G) ? ' ' + fightCost(G) : ''); },
+  get fight() { return fightNews(); },   // the first fight: how it goes, with this enemy's numbers
   elite: 'The elite: two court cards. It fights as the stronger: it flips one card more and hits 1 harder; beat it and take its two highest cards.',
   mark: 'A “?” mark: a walk stops on it and you flip a number card. Hearts heal, diamonds give Energy, spades cost damage, clubs cost Energy. 6 to 10 is the big version.',
   get gate() { return 'A gate: strength ' + C_().rooms.gateStrength + ' walks through; otherwise pay ' + C_().rooms.gateEnergy + ' Energy, or take ' + C_().rooms.gateBlows + ' damage. It never takes a card and never stops your walk.'; },
@@ -3940,6 +4048,17 @@ const NEWS = {
   get 'saint peter'() { return 'Saint Peter covers the gate. ' + D.bossRules(29, G); },
 };
 let shownNew = null;
+// "How a fight works" is said once to a player, not once a run: its flag lives in the browser's storage (every access guarded; without storage it is said once a visit)
+const TKEY = 'commedia.tips.v1'; let tipsMem = {};
+function tipsSeen() { try { const t = JSON.parse(localStorage.getItem(TKEY) || '{}'); return Object.assign({}, tipsMem, t && typeof t === 'object' ? t : {}); } catch (e) { return Object.assign({}, tipsMem); } }
+function tipDone(k) { tipsMem[k] = true; try { const t = JSON.parse(localStorage.getItem(TKEY) || '{}'); t[k] = true; localStorage.setItem(TKEY, JSON.stringify(t)); } catch (e) { /* no storage */ } }
+function tipsClear() { tipsMem = {}; try { localStorage.removeItem(TKEY); } catch (e) { /* no storage */ } }
+// the enemy of the fight in view (a question about it, or the fight itself), or null
+const fightFoe = () => { const fl = G.floor, p = G.pending, at = G.fight ? G.fight.at : p && (p.id === 'foe' || p.id === 'again') ? p.data.at : undefined; return at === undefined ? null : fl.enemies[at] || null; };
+function fightNews() {
+  const e = fightFoe(), s = D.foeSpec(G, e && e.kind !== 'boss' ? e : { kind: 'foe', card: { rank: 'J' } }), pass = D.passCost(G);
+  return 'How a fight works. The enemy starts at ' + s.start + (s.die ? ' plus a die roll' : '') + ' and flips ' + nCards(s.k, 'face-down card') + ' one at a time; each adds its number to its total. Your total is your strength (' + D.fightBase(G) + ') plus the hand cards you play. Whenever the enemy is above you, play hand cards until you are level with it, or stop and take ' + s.blows + ' damage. Level after its last card: you win, and your hand fills back up to ' + D.handMax(G) + '. Before it flips anything you can pay ' + pass + ' Energy to let it pass' + (G.energy >= pass ? '.' : ' (you have only ' + G.energy + ' Energy now).');
+}
 function renderNew() {
   const fl = G.floor, have = new Set(['trail', 'steps']);
   for (let y = 0; y < fl.h; y++) for (let x = 0; x < fl.w; x++) { const c = D.cell(fl, x, y); if (c.base && c.base.t === 'fountain') have.add('fountain'); if (c.item) have.add(c.item.t); if (c.mark && !c.mark.used) have.add('mark'); }
@@ -3947,52 +4066,161 @@ function renderNew() {
   if (G.lvl && G.lvl.kind === 'purgatory') have.add('lightening'); if (G.lvl && G.lvl.kind === 'paradise') have.add('doors');
   if (examNow(G)) have.add('exam');   // said once, on the first Paradise page (a card you have dismissed is in G.seen and does not come back on the next spheres)
   for (const e of fl.enemies) if (e.alive) { have.add(e.kind === 'boss' ? e.name.toLowerCase() : e.kind === 'elite' ? 'elite' : 'foes'); if (e.keeper) have.add('keeper'); }
-  const order = ['trail', 'steps', 'smoke', 'lightening', 'doors', 'exam', 'foes', 'keeper', 'mark', 'fountain', 'chest', 'bait', 'light', 'rest', 'gate', 'toll', 'altar', 'elite', 'cerberus', 'lucifer', 'the wall of fire', 'saint peter'];
+  const fe = fightFoe(); if (fe && fe.kind !== 'boss' && !tipsSeen().fight) have.add('fight');   // a fight is in view: how it goes, once
+  const order = ['fight', 'trail', 'steps', 'smoke', 'lightening', 'doors', 'exam', 'foes', 'keeper', 'mark', 'fountain', 'chest', 'bait', 'light', 'rest', 'gate', 'toll', 'altar', 'elite', 'cerberus', 'lucifer', 'the wall of fire', 'saint peter'];
   const k = order.find(q => have.has(q) && NEWS[q] && !G.seen[q]);
   const box = $('#new'); box.innerHTML = '';
   if (!k || G.over) { box.hidden = true; return; }
   box.hidden = false;
   const h = document.createElement('p'); h.className = 'new-h'; h.textContent = 'New here'; box.appendChild(h);
   const p = document.createElement('p'); p.style.margin = '0 0 8px'; p.textContent = NEWS[k]; box.appendChild(p);
-  box.appendChild(btn('Got it', () => { G.seen[k] = true; renderNew(); }));
+  box.dataset.k = k; box.appendChild(btn('Got it', () => { G.seen[k] = true; if (k === 'fight') tipDone(k); renderNew(); }));
 }
 // ---------- the prompt: a fight as it goes, or any question ----------
 function answer(i, seq) { if (seq !== undefined && (!G.pending || G.pending.seq !== seq)) return; hover = null; G.choices && G.choices.push(i); const nt = $('#notice'); if (nt) nt.hidden = true; D.answer(G, i, seq); render(); if (G.over) stopBot(); }   // seq: the number of the question the tap was meant for; a stale or doubled tap is ignored (audit F3)
 function btn(label, fn, cls) { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; if (cls) b.className = cls; b.addEventListener('click', fn); return b; }
-function row(who, total, cards, extra, tcls, back) {
-  const r = document.createElement('div'); r.className = 'frow';
+function captionBtn(label, cap, fn, cls) { const b = document.createElement('button'); b.type = 'button'; b.className = (cls ? cls + ' ' : '') + 'two'; const l = document.createElement('span'); l.className = 'bl'; l.textContent = label; const c = document.createElement('small'); c.className = 'cap'; c.textContent = cap; b.appendChild(l); b.appendChild(c); b.addEventListener('click', fn); return b; }   // a button with a line under its name
+// ---------- a fight, in everyday words ----------
+// Every number is the engine's: the fight under way (G.fight), D.foeSpec (an enemy's start, how many cards it flips, the damage of a loss), D.fightBase (what you bring), D.passCost, D.handMax, D.CONFIG.fight.
+// fightFacts reads them into plain data and the helpers after it turn that into sentences, with no DOM, so the tests call them (window.CommediaUI, at the end).
+const nCards = (n, w) => n + ' ' + (w || 'card') + (n === 1 ? '' : 's');
+const rankSum = cs => cs.reduce((a, c) => a + c.rank, 0);
+const ranksText = cs => cs.map(c => c.rank).join(' + ');
+const sgn = n => (n < 0 ? '−' : '+') + Math.abs(n);
+function fightFacts(G, p) {
+  const fl = G.floor, f = G.fight, e = fl.enemies[f ? f.at : p.data.at], boss = e.kind === 'boss', s = D.foeSpec(G, e), base = f ? f.base : D.fightBase(G);
+  const dark = D.terrAt(fl, G.pos[0], G.pos[1]) === 'dark' ? D.CONFIG.fight.dark : 0;
+  const F = { e, boss, spec: s, name: boss ? e.name : D.foeName(e), base, strength: G.strength, dark, bonus: base - G.strength - dark, blows: f ? f.blows : s.blows, pass: D.passCost(G), canPass: !!D.passOption(G), energy: G.energy, hand: D.handMax(G), hits: s.hits, wins: boss ? G.bossWins[D.bossKey(fl.page)] || 0 : 0 };
+  if (f) {   // a fight under way: what it has flipped so far, what you have played, how far short you are
+    F.stage = 'add'; F.k = f.k; F.turned = f.turned; F.left = f.k - f.turned.length; F.die = f.die || 0; F.its = f.its; F.start = f.its - rankSum(f.turned) - F.die; F.played = f.played; F.mine = D.fightMine(G);
+  } else if (p.id === 'again' || (e.known && p.id !== 'foe')) {   // after a loss, or an enemy met again: its cards are face up and its total is known
+    const T = e.known.total, cs = e.known.cards;
+    F.stage = 'again'; F.k = cs.length; F.turned = cs; F.left = 0; F.its = T; F.die = Math.max(0, T - rankSum(cs) - s.start); F.start = T - rankSum(cs) - F.die; F.played = []; F.mine = base;
+  } else {   // the question before a fight: fight it or let it pass; nothing has flipped
+    F.stage = 'meet'; F.k = s.k; F.turned = []; F.left = s.k; F.die = 0; F.its = s.start; F.start = s.start; F.played = []; F.mine = base;
+  }
+  F.short = F.its - F.mine;
+  return F;
+}
+// what the enemy has, as a sum
+function enemyWords(F) {
+  const It = F.boss ? 'He' : 'It';
+  if (F.stage === 'meet') return 'Starts at ' + F.start + (F.spec.die ? ' plus a die roll' : '') + ', then flips ' + nCards(F.k, 'face-down card') + (F.k > 1 ? ' one at a time' : '') + '; ' + (F.k > 1 ? 'each adds' : 'it adds') + ' its number.';
+  const sum = (F.start || !F.boss ? [F.start + ' to start'] : []).concat(F.die ? [F.die + ' on its die'] : [], F.turned.length ? [ranksText(F.turned) + ' flipped'] : []).join(' + ');
+  return It + ' has ' + F.its + (sum ? ' (' + sum + ')' : '') + '. ' + (F.stage === 'again' ? 'Its cards are face up now: nothing more will flip.' : F.left ? It + ' still flips ' + nCards(F.left, 'more card') + '.' : It + ' has flipped all ' + (F.boss ? 'his' : 'its') + ' cards.');
+}
+// what you have, as a sum
+function youWords(F) {
+  const extra = [[F.dark, 'the dark'], [F.bonus, 'a bonus']].filter(q => q[0]);
+  if (F.stage !== 'add') return extra.length ? 'You bring ' + F.mine + ': strength ' + F.strength + extra.map(q => ', ' + q[1] + ' ' + sgn(q[0])).join('') + '.' : 'Your strength is ' + F.mine + '.';
+  if (!extra.length && !F.played.length) return 'You have ' + F.mine + ' (your strength).';
+  return 'You have ' + F.mine + ': ' + ['strength ' + F.strength].concat(extra.map(q => q[1] + ' ' + sgn(q[0])), F.played.length ? ['played ' + ranksText(F.played)] : []).join(', ') + '.';
+}
+// the sentence that says where you stand and what to do now
+function fightLead(F, opts) {
+  const reach = (opts || []).some(o => o.cards);   // a way to be level with your hand
+  if (F.stage === 'meet') return F.short > 0 ? (F.boss ? 'He' : 'It') + ' starts at ' + F.start + ' and you have ' + F.mine + ', so you must play hand cards worth at least ' + F.short + ' to begin, before it flips anything.' : 'You have as much as its start (' + F.start + '): you play nothing until a flip puts it above you.';
+  if (F.stage === 'again') return F.short > 0 ? 'To beat it you need ' + F.short + ' more than your ' + F.mine + '.' + (reach ? ' Play hand cards worth at least ' + F.short + ',' : ' Your hand cannot reach it;') + (F.canPass ? ' pay ' + F.pass + ' Energy,' : '') + ' or walk round it.' : 'Your ' + F.mine + ' already beats it.';
+  return 'You are ' + F.short + ' short. ' + (reach ? 'Play hand cards worth at least ' + F.short + (F.boss ? ' to win the round, or stop and lose it.' : ' to stay in the fight, or stop.') + (F.boss || !F.left ? '' : ' It then flips ' + (F.left > 1 ? 'its next card' : 'its last card') + '.') : 'Your hand cannot reach it, so you can only stop.');
+}
+// the line under a button: what it does and what happens next
+function fightCaption(F, o) {
+  const Obj = F.boss ? 'him' : 'it';
+  switch (o.act) {
+    case 'fight': return 'It flips ' + nCards(F.k) + (F.k > 1 ? ', one at a time' : '') + '. Keep level with it using hand cards, or stop and lose. Level after its last card: you win.';
+    case 'pass': return 'Pay ' + F.pass + ' Energy and step past it: no fight, no damage.';
+    case 'add': { const sum = rankSum(o.cards), after = F.mine + sum, over = after - F.its; return 'You would have ' + after + ': ' + (over ? over + ' above ' + Obj : 'level') + (F.boss ? ', so you win the round.' : F.left ? '.' : ', and it has no cards left: you win.'); }
+    case 'stop': return F.boss ? 'You lose the round and take ' + F.blows + ' damage.' : 'You lose and take ' + F.blows + ' damage. Its other cards turn over, so you see its total: then fight again, pay ' + F.pass + ' Energy or walk round it.';
+    case 'cover': return (F.base + rankSum(o.cards)) + ' against ' + F.its + ': you win and step onto its square.';
+    case 'leave': return 'Walk round it. It stays here, and its total stays known.';
+  }
+  return '';
+}
+function eqRow(who, start, cards, backs, total, tcls, startTitle) {   // one side of the fight as a sum: the number it begins with, the cards added to it, and the total
+  const r = document.createElement('div'); r.className = 'frow eq';
   const w = document.createElement('span'); w.className = 'who'; w.textContent = who; r.appendChild(w);
-  for (const c of cards) r.appendChild(pcard(c, 'sm'));
-  for (let i = 0; i < (back || 0); i++) r.appendChild(pcard(null, 'sm'));
-  const t = document.createElement('span'); t.className = 'total ' + (tcls || ''); t.textContent = total; r.appendChild(t);
-  if (extra) { const x = document.createElement('span'); x.className = 'fnote'; x.textContent = extra; r.appendChild(x); }
+  const b = document.createElement('span'); b.className = 'badge'; b.textContent = start; if (startTitle) b.title = startTitle; r.appendChild(b);
+  const op = t => { const o = document.createElement('span'); o.className = 'op'; o.setAttribute('aria-hidden', 'true'); o.textContent = t; r.appendChild(o); };
+  for (const c of cards) { op('+'); r.appendChild(pcard(c, 'sm')); }
+  for (let i = 0; i < (backs || 0); i++) { op('+'); r.appendChild(pcard(null, 'sm')); }
+  op('='); const t = document.createElement('span'); t.className = 'total ' + (tcls || ''); t.textContent = total; r.appendChild(t);
   return r;
 }
-function fightPanel(p) {
-  const fl = G.floor, f = G.fight, id = p.id, at = f ? f.at : p.data.at, e = fl.enemies[at], boss = e.kind === 'boss';
-  const box = document.createElement('div'); box.className = 'fight';
+const para = (txt, cls) => { const n = document.createElement('p'); n.className = cls; n.textContent = txt; return n; };
+function fightPanel(p, F) {
+  F = F || fightFacts(G, p);
+  const e = F.e, box = document.createElement('div'); box.className = 'fight';
   const h = document.createElement('h3'); h.className = 'frow';
-  if (!boss) (e.kind === 'elite' ? e.cards : [e.card]).forEach(cc => h.appendChild(pcard(cc, 'sm')));
-  h.appendChild(document.createTextNode((boss ? e.name : e.kind === 'elite' ? 'The elite' : D.foeName(e)) + (boss ? ': ' + (G.bossWins[D.bossKey(fl.page)] || 0) + ' of ' + D.foeSpec(G, e).hits + ' rounds won' : ''))); box.appendChild(h);
-  const dark = D.terrAt(fl, G.pos[0], G.pos[1]) === 'dark', base = f ? f.base : D.fightBase(G);
-  const mineExtra = (base ? '(' + base + ' strength' + (dark ? ' and the dark' : '') + ')' : '');
-  if (f) {
-    const left = f.k - f.turned.length, mine = D.fightMine(G), short = f.its - mine;
-    box.appendChild(row(boss ? e.name : 'Enemy', f.its, f.turned, (f.die ? 'start + die ' + f.die + '. ' : '') + (left ? left + ' more to flip' : 'all flipped'), short > 0 ? 'lose' : '', left));
-    box.appendChild(row('You', mine, f.played, mineExtra, short <= 0 ? 'ok' : ''));
-    const n = document.createElement('p'); n.className = 'fnote';
-    n.textContent = short > 0 ? 'You are ' + short + ' short. Add hand cards to be level, or stop' + (boss ? ' (a round lost costs ' + f.blows + ' damage).' : ' and lose ' + f.blows + ' damage.') : '';
-    if (n.textContent) box.appendChild(n);
-  } else if (id === 'again' || (e.known && id !== 'foe')) {
-    box.appendChild(row('Enemy', e.known.total, e.known.cards, 'its total is known', 'lose'));
-    box.appendChild(row('You', base, [], mineExtra + ' + your hand cards'));
-  } else {
-    const s = D.foeSpec(G, e);
-    box.appendChild(row('Enemy', s.start + (s.die ? ' + die' : ''), [], 'starts here, then flips ' + s.k + ' blind card' + (s.k > 1 ? 's' : '') + '. A loss costs ' + s.blows + ' damage.', '', s.k));
-    box.appendChild(row('You', base, [], mineExtra));
-    const n = document.createElement('p'); n.className = 'fnote'; n.textContent = 'Win: you draw back up to ' + D.handMax(G) + '. You choose each card only when it is above you.' + (fightCost(G) ? ' ' + fightCost(G) : '') + (e.keeper ? ' ' + keeperTail : ''); box.appendChild(n);
-  }
+  if (!F.boss) (e.kind === 'elite' ? e.cards : [e.card]).forEach(cc => h.appendChild(pcard(cc, 'sm')));
+  h.appendChild(document.createTextNode((F.boss ? e.name : e.kind === 'elite' ? 'The elite' : D.foeName(e)) + (F.boss ? ': ' + F.wins + ' of ' + F.hits + ' rounds won' : ''))); box.appendChild(h);
+  const meet = F.stage === 'meet';
+  box.appendChild(eqRow(F.boss ? e.name : 'Enemy', F.start + (meet && F.spec.die ? ' + die' : F.die ? ' + ' + F.die : ''), F.turned, F.left, F.its, meet ? '' : F.short > 0 ? 'lose' : '', 'the number it starts at'));
+  box.appendChild(para(enemyWords(F), 'fsum'));
+  box.appendChild(eqRow('You', F.base, F.played, 0, F.mine, meet ? '' : F.short <= 0 ? 'ok' : '', 'what you bring before any card: your strength and what adds to it'));
+  box.appendChild(para(youWords(F), 'fsum'));
+  box.appendChild(para(fightLead(F, p.options), 'fnote lead'));
+  if (meet) {   // what else the fight costs or does: steps taken from the allowance, a keeper on the hole, no Energy to pay
+    const t = [fightCost(G), F.e.keeper ? keeperTail : '', F.canPass ? '' : 'Letting it pass costs ' + F.pass + ' Energy and you have ' + F.energy + ', so you must fight.'].filter(Boolean).join(' ');
+    if (t) box.appendChild(para(t, 'fnote'));
+  } else if (p.options.some(o => o.cards && o.cards.length === 1)) box.appendChild(para('Tap a bright card in your hand to play it, or choose below.', 'fnote'));
   return box;
+}
+// ---------- How to play, in one minute: opens on a player's first run, and again from the Rules button ----------
+// Six things to know, in everyday words; every number is read from the engine's tables (the skull, the price of letting an enemy pass, the hand, the circles, the first circle's allowance). Whether it has been read is kept in the browser's
+// storage (every access guarded), so it opens once for a player, not once a run.
+const HKEY = 'commedia.howto.v1'; let howtoMem = false, howtoFrom = null;
+function howtoSeen() { if (howtoMem) return true; try { return localStorage.getItem(HKEY) === '1'; } catch (e) { return false; } }
+function howtoDone() { howtoMem = true; try { localStorage.setItem(HKEY, '1'); } catch (e) { /* no storage */ } }
+function howtoItems() {
+  const C = D.CONFIG, k = C.steps.skull, allowed = D.book().pages[D.circleKey(1)].dials.steps, pass = D.passCost(null), hand = C.start.hand;
+  return [
+    ['you', 'Walk to the hole.', 'You start in one corner of the page and the hole is in another. Tap or click a dot on the map, or a line in the list under it, to walk there (on a touch screen the first tap shows where it leads and the second walks). The number on the dot is how many steps it takes.'],
+    ['steps', 'Count your steps.', 'Each page allows a number of steps: the first chip at the top says how many (' + allowed + ' on the first circle). Past that, every ' + k + 'th step is a skull and costs 1 Health, and at 0 Health the run ends. Look at the exit before you choose a long way round.'],
+    ['trail', 'Never step on your own trail.', 'The shaded squares behind you are your trail, and you cannot walk onto them again. Every choice closes a way behind you.'],
+    ['door', 'Doors open one way.', 'A door has a chevron: cross it only the way it points. Every other passage opens both ways. You can never get stuck: from every square there is a way on to the hole.'],
+    ['foe', 'Enemies and your hand.', 'A court card on the map is an enemy. Under the map is your hand of ' + hand + ' number cards. Walk into an enemy and play hand cards to keep level with it, or pay ' + pass + ' Energy to let it pass, or walk round it. The first fight explains itself, step by step.'],
+    ['hole', 'The hole.', 'Step into the hole to go on: you drop onto the next page, and there is no way back up. There are ' + C.circles + ' circles in Inferno, and a boss covers the last hole of each chapter.'],
+  ];
+}
+function fillHowto() {
+  const list = $('#howto-list'), lead = $('#howto-lead'); if (!list) return; list.innerHTML = '';
+  const items = howtoItems(); if (lead) lead.textContent = nWords(items.length) + ' things to know, then walk. Everything else is explained the first time you meet it, and the rules card has the rest.';
+  for (const [sym, head, text] of items) { const li = document.createElement('li'); li.innerHTML = '<svg data-sym="' + sym + '" aria-hidden="true"></svg><div><b></b><p></p></div>'; li.querySelector('b').textContent = head; li.querySelector('p').textContent = text; list.appendChild(li); }
+}
+const nWords = n => ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'][n] || String(n);
+function openHowto() { const h = $('#howto'); if (!h) return; if (h.hidden) howtoFrom = (document.activeElement && document.activeElement !== document.body) ? document.activeElement : null; h.hidden = false; h.scrollTop = 0; const t = $('#howto-h'); if (t && t.focus) t.focus({ preventScroll: true }); }   // focus goes to its heading, without scrolling to the button at the bottom
+function closeHowto() { const h = $('#howto'); if (!h || h.hidden) return; h.hidden = true; howtoDone(); if (howtoFrom && howtoFrom.focus) howtoFrom.focus(); howtoFrom = null; }
+// ---------- the rules card's fight: the idea in a paragraph, then one fight worked through ----------
+// The example is played here with the engine's own rule for what a play may be (D.covers, the cheapest set of hand cards that reaches the gap) and its tables: a queen of the first circle against a Pilgrim with the hand 6, 5, 4, 3, 2,
+// the cards it flips being 5, 4, 3 in turn. Only those card values are illustration; the start, how many cards it flips, the damage, the price of letting it pass and the hand size are read from CONFIG, and a test replays the
+// same fight in the engine and checks every total.
+const EXAMPLE = { rank: 'Q', hand: [6, 5, 4, 3, 2], flips: [5, 4, 3] };
+function fightExample() {
+  const C = D.CONFIG, F = C.fight, s = D.foeSpec(null, { kind: 'foe', card: { rank: EXAMPLE.rank, suit: 'S' } }, 1), pass = D.passCost(null), size = C.start.hand;
+  let hand = EXAMPLE.hand.map(r => ({ rank: r, suit: 'H' })), mine = C.start.strength, its = s.start, flipped = 0, won = true;
+  const steps = [], flips = [];
+  const play = () => {   // be level: the cheapest cards that do it (nothing when you already are)
+    const gap = its - mine; if (gap <= 0) return 'You are level, so you play nothing.';
+    const cs = D.covers(hand, gap)[0]; if (!cs) { won = false; return 'You are ' + gap + ' short and no cards of yours reach it: you stop.'; }
+    for (const c of cs) hand.splice(hand.indexOf(c), 1);
+    mine += rankSum(cs); return 'You are ' + gap + ' short, so you play ' + ranksText(cs) + ' from your hand: you have ' + mine + ', level.';
+  };
+  steps.push('Before it flips anything it has ' + its + ' and you have ' + mine + '. ' + play());
+  while (won && flipped < s.k) { const c = EXAMPLE.flips[flipped % EXAMPLE.flips.length]; flipped++; flips.push(c); its += c; steps.push('It flips a ' + c + ': it has ' + its + '. ' + play()); }
+  steps.push(won ? 'It has no cards left and you are level: you win, and your hand fills back up to ' + size + ' cards.' : 'You lose and take ' + s.blows + ' damage.');
+  return { rank: EXAMPLE.rank, start: s.start, k: s.k, blows: s.blows, pass, strength: C.start.strength, hand: EXAMPLE.hand, flips, steps, won, size, left: hand.map(c => c.rank) };
+}
+function fightCardLead() {
+  const C = D.CONFIG, F = C.fight, c1 = D.book().pages[D.circleKey(1)].dials.base, c9 = D.book().pages[D.circleKey(C.circles)].dials.base, damage = [...new Set([F.blows.J, F.blows.Q, F.blows.K])].sort((a, b) => a - b);
+  return 'An enemy is a number that grows. It starts at its page’s number (' + c1 + ' on the first circle, ' + c9 + ' on the last) and flips face-down number cards one at a time: a jack flips ' + nCards(F.cards.J) + ', a queen ' + F.cards.Q + ', a king ' + F.cards.K + '. Each card adds its number to the enemy. Your number is your strength plus the hand cards you play. Whenever the enemy is above you, play hand cards until you are level with it, or stop and take its damage (' + damage.join(' or ') + '). If you are level after its last card you win, and your hand fills back up to ' + C.start.hand + '. Before it flips anything you may pay ' + D.passCost(null) + ' Energy to let it pass.';
+}
+function fillFightCard() {
+  const lead = $('#card-fight-lead'), list = $('#card-fight-example'); if (!lead || !list) return;
+  lead.textContent = fightCardLead(); list.innerHTML = '';
+  const X = fightExample(), li = t => { const n = document.createElement('li'); n.textContent = t; list.appendChild(n); };
+  li('The setup. A queen waits on the first circle: it starts at ' + X.start + ' and flips ' + nCards(X.k) + '. You have strength ' + X.strength + ' and the hand ' + X.hand.join(', ') + '. You step into it and choose Fight it (the other choice is to pay ' + X.pass + ' Energy and let it pass).');
+  X.steps.forEach(li);
+  const aft = $('#card-fight-after'); if (aft) aft.textContent = 'Had you stopped at any point instead of playing, you would have lost ' + X.blows + ' damage. Its other cards turn over, so you see its total, and you may fight it again with cards that beat it, pay ' + X.pass + ' Energy, or walk round it.';
 }
 // the end of a chapter is a win of its own, said so before the blessing is chosen: what it gives, and what it opens in the Ledger (Hard after Inferno, Brutal after Purgatory) while that is still closed
 function clearedPanel() {
@@ -4003,9 +4231,18 @@ function clearedPanel() {
   s.textContent = 'You have walked ' + G.steps + ' steps so far. Health and Energy are refilled, the deck is new and your hand stays. You can close the page at this break and come back.' + (opens && !G.practice && !D.ledgerEntries(LEDGER).open.includes(opens[0]) ? ' ' + opens[1] + ' opens in your Ledger when this run ends, however it ends.' : '');
   box.appendChild(s); return box;
 }
+// a question can appear while a narrow screen is scrolled somewhere else: bring it into view. A fight's panel is first on the page (under the status bar), so the page goes back to the top to show it from its first line; any other question
+// sits under the maze and is scrolled to only as far as it needs (the style sheet leaves room for the status bar). A wide screen shows the question beside the maze, so nothing moves there.
+function bringIntoView(el) {
+  if (!el.getBoundingClientRect || !window.innerWidth || window.innerWidth >= 1240) return;
+  if ($('#game').classList.contains('fighting')) { if (window.scrollY > 0 && window.scrollTo) window.scrollTo(0, 0); return; }
+  const r = el.getBoundingClientRect(); if (!el.scrollIntoView || (r.top >= 66 && r.bottom <= window.innerHeight)) return;
+  el.scrollIntoView({ block: r.height > window.innerHeight - 70 ? 'start' : 'nearest', behavior: calm() ? 'auto' : 'smooth' });
+}
 function renderPrompt() {
-  const prompt = $('#prompt'); prompt.innerHTML = ''; prompt.hidden = true; const hint = $('#hint'); hint.textContent = '';
+  const prompt = $('#prompt'); prompt.innerHTML = ''; prompt.hidden = true; const hint = $('#hint'); hint.textContent = ''; { const ways = $('#ways'); if (ways && !(G.phase === 'move' && G.options && !G.pending && !G.over)) ways.hidden = true; }   // (the list of ways is drawn with the dots, in renderBoard)
   $('#col-side').classList.toggle('ended', !!G.over);   // a finished run puts its verdict right under your numbers (CSS), so a phone shows it before the hand and the enemies
+  { const gm = $('#game'); gm.classList.toggle('fighting', !G.over && !!(G.fight || (G.pending && (G.pending.id === 'foe' || G.pending.id === 'again')))); gm.classList.toggle('asking', !G.over && !!G.pending); }   // a narrow screen puts a fight's panel and your hand first, a question under the maze
   if (G.over) {
     prompt.hidden = false;
     prompt.innerHTML = '<p class="over-h"></p><p class="over-s"></p>';
@@ -4023,18 +4260,18 @@ function renderPrompt() {
   }
   if (G.pending) {
     const p = G.pending; prompt.hidden = false;
-    const fightish = G.fight || p.id === 'foe' || p.id === 'again';
-    if (fightish) prompt.appendChild(fightPanel(p));
+    const fightish = G.fight || p.id === 'foe' || p.id === 'again', F = fightish ? fightFacts(G, p) : null;
+    if (F) prompt.appendChild(fightPanel(p, F));
     else { if (p.id === 'gift' && G.gateNext && G.giftsDue === G.giftsTotal) prompt.appendChild(clearedPanel()); const q = document.createElement('p'); q.className = 'prompt-t'; q.textContent = p.prompt; prompt.appendChild(q); }
-    const cmd = document.createElement('div'); cmd.className = 'fcmd';
+    const cmd = document.createElement('div'); cmd.className = 'fcmd' + (F ? ' captioned' : '');
     p.options.forEach((o, i) => {
-      const b = btn(o.label, () => answer(i, p.seq), i === 0 && o.act !== 'stop' ? 'primary' : o.act === 'stop' || o.act === 'leave' || o.act === 'none' ? 'quiet' : '');
+      const cls = i === 0 && o.act !== 'stop' ? 'primary' : o.act === 'stop' || o.act === 'leave' || o.act === 'none' ? 'quiet' : '', cap = F ? fightCaption(F, o) : '';
+      const b = cap ? captionBtn(o.label, cap, () => answer(i, p.seq), cls) : btn(o.label, () => answer(i, p.seq), cls);   // in a fight every button says what it does and what happens next
       if (o.cards) { const on = () => renderHand(o.cards), off = () => renderHand(); b.addEventListener('mouseenter', on); b.addEventListener('focus', on); b.addEventListener('mouseleave', off); b.addEventListener('blur', off); }
       cmd.appendChild(b);
     });
-    prompt.appendChild(cmd); return;
+    prompt.appendChild(cmd); bringIntoView(prompt); return;
   }
-  if (G.phase === 'move') hint.textContent = (touchy() ? 'Tap a dot to see where it leads, tap it again (or press Walk here) to go. ' : 'Tap a dot on the page to walk there. ') + 'The number is its steps. \u2694 meets an enemy; \u00a4 is a price in Energy on the way (a toll or a gate), ! is damage.';
 }
 function renderLog() { const ul = $('#log'); ul.innerHTML = ''; for (const l of G.log.slice(-60)) { const li = document.createElement('li'); li.className = 'k-' + l.kind; li.textContent = l.msg; ul.appendChild(li); } ul.scrollTop = ul.scrollHeight; }
 function newSeed() { return 1 + Math.floor(Math.random() * 999999); }
@@ -4148,7 +4385,7 @@ function describe(o) {
     const fc = fightCost(G), kp = e.keeper ? ' ' + keeperTail : '';   // (fighting again once its total is known takes no steps, so only a fresh fight says what it costs)
     if (e.known) return 'Meet ' + D.foeName(e) + ' again: its total is ' + e.known.total + '. Beat it with your cards, pay ' + D.passCost(G) + ' Energy, or leave it.' + kp;
     if (!e.card && e.kind === 'foe') return 'Meet the hidden enemy: its court card is flipped, then fight it or pay ' + D.passCost(G) + ' Energy.' + (fc ? ' ' + fc : '') + kp;
-    const s = D.foeSpec(G, e); return 'Meet ' + D.foeName(e) + ': it starts at ' + s.start + (s.die ? ' plus a die' : '') + ' and flips ' + s.k + ' blind card' + (s.k > 1 ? 's' : '') + '. Fight it (a loss costs ' + s.blows + ' damage) or pay ' + D.passCost(G) + ' Energy. ' + (e.keeper ? keeperTail : 'Beaten or paid, you step onto its square.') + (fc ? ' ' + fc : '');
+    const s = D.foeSpec(G, e); return 'Meet ' + D.foeName(e) + ': it starts at ' + s.start + (s.die ? ' plus a die' : '') + ' and flips ' + s.k + ' blind card' + (s.k > 1 ? 's' : '') + '. Fight it (a loss costs ' + s.blows + ' damage), or pay ' + D.passCost(G) + ' Energy to let it pass' + (e.keeper ? '' : ', or walk round it') + (D.passOption(G) ? '' : ' (you have only ' + G.energy + ' Energy now)') + '. ' + (e.keeper ? keeperTail : 'Beaten or paid, you step onto its square.') + (fc ? ' ' + fc : '');
   }
   const A = D.allowance(G), after = fl.steps + o.steps, sk = fl.clockStopped ? 0 : Math.floor(Math.max(0, after - A) / D.CONFIG.steps.skull) - Math.floor(Math.max(0, fl.steps - A) / D.CONFIG.steps.skull);
   const parts = ['Walk here: ' + o.steps + ' step' + (o.steps === 1 ? '' : 's') + (fl.clockStopped ? ' (the step clock has stopped)' : ' (to ' + after + ' of ' + A + ')') + (sk > 0 ? ', ' + sk + ' skull' + (sk > 1 ? 's' : '') + ' (\u2212' + sk + ' Health)' : '') + '.'];
@@ -4162,12 +4399,56 @@ function describe(o) {
   if (!fl.clockStopped) parts.push(leadText(o));
   return parts.join(' ');
 }
+// ---------- what each way costs and leaves you with, at every stop ----------
+// The engine already prices every walk (D.options: its steps, gates, tolls, Health on the way) and measures the way on (D.exitInfo: the steps to the exit, and what is left of the allowance there, below zero when it is
+// past it). wayFacts reads those and the step clock into plain data; wayWords turns it into the line a way gets in the list under the maze: its steps, what it stops at, what it costs, and how it leaves you for the exit.
+const SKULL = '☠';
+function clockWords(G) {   // the skull clock in a sentence: the first skull is the 4th step past the allowance (up to 3 over are free), then every 4th
+  const fl = G.floor, A = D.allowance(G), k = D.CONFIG.steps.skull, used = fl.steps;
+  if (fl.clockStopped) return 'The step clock has stopped: the boss is the last thing on this page.';
+  const over = Math.max(0, used - A), next = A + k * (Math.floor(over / k) + 1) - used;
+  return (over ? 'Next skull (\u22121 Health) in ' : 'First skull (\u22121 Health) in ') + stepsText(next) + ', then every ' + k + 'th step.';
+}
+const ROOM_SHORT = { fountain: () => 'the fountain', bait: G => 'a Meal (+' + D.baitHeal(G) + ' Health)', light: () => 'a Flask (+' + D.CONFIG.rewards.light + ' Energy)', chest: G => 'a chest (+' + D.chestHeal(G) + ' Health, +' + D.CONFIG.rewards.chest[1] + ' Energy)', rest: G => 'a rest (+' + D.restHeal(G) + ' Health, ' + D.CONFIG.rooms.restSteps + ' steps)', altar: () => 'an altar' };
+function wayFacts(G, o) {
+  const fl = G.floor, A = D.allowance(G), k = D.CONFIG.steps.skull, R = D.CONFIG.rooms, used = fl.steps, stopped = !!fl.clockStopped;
+  const skulls = (from, to) => stopped ? 0 : Math.floor(Math.max(0, to - A) / k) - Math.floor(Math.max(0, from - A) / k);   // skulls between two step counts
+  const W = { o, steps: o.steps, after: used + o.steps, allowance: A, stopped, skulls: skulls(used, used + o.steps), prices: [], exit: null };
+  W.kind = o.fight ? 'fight' : o.fall ? 'fall' : o.gamble ? 'gamble' : o.ride ? 'ride' : o.mark ? 'mark' : 'move';
+  if (o.gates) W.prices.push('gate: ' + (o.gatePay === 'energy' ? R.gateEnergy * o.gates + ' Energy' : R.gateBlows * o.gates + ' damage'));
+  if (o.gatesFree) W.prices.push('the gate opens for you');
+  if (o.tolls) W.prices.push('toll: ' + R.toll * o.tolls + ' Energy');
+  if (o.hp) W.prices.push(o.hp + ' Health on the way');
+  W.head = wayHead(G, W);
+  const ex = D.exitInfo(G, o);
+  if (ex) { const atExit = A - ex.left; W.exit = { toExit: ex.toExit, left: ex.left, skulls: skulls(used, atExit), fixed: ex.fixed }; }
+  return W;
+}
+function wayHead(G, W) {   // what the way is: where it stops, in a few words
+  const o = W.o, e = o.fight, lv = G.lvl, fl = G.floor;
+  if (W.kind === 'fight') return e.kind === 'boss' ? (examOf(G, e) ? e.name + ' asks what you carry' : 'a round against ' + e.name) : e.kind === 'elite' ? 'the elite: fight it, or pay ' + D.passCost(G) + ' Energy' : e.known ? D.foeName(e) + ' again (total ' + e.known.total + ')' : (e.card ? D.foeName(e) : 'a hidden enemy') + ': fight it, or pay ' + D.passCost(G) + ' Energy';
+  if (W.kind === 'fall') return D.isChapterEnd(fl.level) ? 'the hole: this chapter is won' : lv && lv.kind === 'purgatory' && lv.at + 1 < lv.fls.length ? 'the stair to the upper grid' : lv && lv.kind === 'paradise' && lv.door ? 'the hole: ' + lv.door.name + '’s reward' : lv && lv.kind === 'purgatory' ? 'the stair up (the Lightening)' : 'the hole: down to the next circle';
+  if (W.kind === 'gamble') return 'a dotted hole: roll to see if it is real';
+  if (W.kind === 'mark') return 'a “?” mark: flip a card';
+  const t = D.roomAt(G, fl, o.end[0], o.end[1]);
+  return t ? ROOM_SHORT[t](G) : W.kind === 'ride' ? 'a bubble: it carries you on, free' : 'the next fork';
+}
+function wayExit(W) {   // how the way leaves you for the exit: its distance, and what is left of the allowance there (or how far past it, and the skulls that cost)
+  const x = W.exit; if (!x) return '';
+  if (W.stopped) return 'exit ' + x.toExit + ' on';
+  const here = W.kind === 'fall' ? '' : 'exit ' + x.toExit + ' on, ';
+  return here + (x.left >= 0 ? x.left + ' to spare' : -x.left + ' over' + (x.skulls > 0 ? ' (' + SKULL + ' −' + x.skulls + ')' : ''));
+}
+function wayWords(W) {   // the pieces of a row: [steps, head, price (cost on the way, if any), exit]
+  const price = W.prices.concat(W.skulls > 0 ? [SKULL + ' −' + W.skulls + ' Health'] : []);
+  return { n: W.kind === 'fight' ? '⚔' : W.kind === 'fall' ? '◯' : String(W.steps), head: W.head, price: price.join(', '), exit: wayExit(W) };
+}
 // the walks you can take, as dots on the board. Walks that end on the same square (the fast and the safe way of a crossroads, a gate paid two ways) are spread side by side so each can be reached (audit F1);
 // on a phone or tablet a tap SELECTS a walk (its path and its price show, with a Walk here button) and a second tap on it walks it, so a slip of the finger costs nothing (audit F3)
 let selIdx = null;
 const touchy = () => (window.matchMedia && matchMedia('(pointer: coarse)').matches) || window.innerWidth <= 640;
 function targets(svg) {
-  const offs = D.dotOffsets(G.options);
+  const offs = D.dotOffsets(G.options), pickers = [];
   G.options.forEach((o, i) => {
     let X, Y, kind = 'move';
     if (o.fight) { const e = o.fight; const tx = e.kind === 'boss' ? Math.max(e.x - 1, Math.min(e.x + 1, o.end[0])) : e.x, ty = e.kind === 'boss' ? Math.max(e.y - 1, Math.min(e.y + 1, o.end[1])) : e.y; X = (xPx(o.end[0]) + xPx(tx)) / 2 + CS / 2; Y = (yPx(o.end[1]) + yPx(ty)) / 2 + CS / 2; kind = 'fight'; }
@@ -4179,21 +4460,43 @@ function targets(svg) {
     el('circle', { cx: X, cy: Y, r: CS / 2, class: 'hit' }, g);   // the whole square is the target (no overlap with the next square's)
     el('circle', { cx: X, cy: Y, r: kind.startsWith('move') ? 10 : 12, class: 'dot' }, g);
     if (kind === 'move') el('text', { x: X, y: Y + 4, class: 'dot-t steps-t' }, g, String(o.steps));
-    if (kind === 'move ride') el('text', { x: X, y: Y + 4, class: 'dot-t' }, g, '\u25e6');
-    if (kind === 'move price') el('text', { x: X, y: Y + 4, class: 'dot-t' }, g, o.gatePay === 'blows' ? '!' : '\u00a4');
-    if (kind === 'fight') el('text', { x: X, y: Y + 5, class: 'dot-t' }, g, '\u2694');
+    if (kind === 'move ride') el('text', { x: X, y: Y + 4, class: 'dot-t' }, g, '◦');
+    if (kind === 'move price') el('text', { x: X, y: Y + 4, class: 'dot-t' }, g, o.gatePay === 'blows' ? '!' : '¤');
+    if (kind === 'fight') el('text', { x: X, y: Y + 5, class: 'dot-t' }, g, '⚔');
     el('title', {}, g, describe(o));
     const go = () => { hover = null; selIdx = null; G.choices && G.choices.push(i); const nt = $('#notice'); if (nt) nt.hidden = true; D.choose(G, i); render(); if (G.over) stopBot(); };
     const show = () => { hover = o.path.concat(o.fight ? [[o.fight.x, o.fight.y]] : []); $('#hint').textContent = describe(o); const old = svg.querySelector('.path'); if (old) old.remove(); svg.insertBefore(el('polyline', { points: hover.map(([x, y]) => (xPx(x) + CS / 2) + ',' + (yPx(y) + CS / 2)).join(' '), class: 'path' }), svg.querySelector('.you')); };
-    g.addEventListener('click', () => {
-      if (touchy() && selIdx !== i) { selIdx = i; show(); $('#hint').textContent = describe(o); confirmBar(o, go); svg.querySelectorAll('.target').forEach(t => t.classList.remove('picked')); g.classList.add('picked'); return; }
+    const hide = () => { if (selIdx !== null) return; hover = null; const old = svg.querySelector('.path'); if (old) old.remove(); };
+    // a tap (or a click on the list) on a touch screen first SELECTS the walk, then walks it; with a mouse it walks at once
+    const activate = () => {
+      if (touchy() && selIdx !== i) { selIdx = i; show(); $('#hint').textContent = describe(o); confirmBar(o, go); svg.querySelectorAll('.target').forEach(t => t.classList.remove('picked')); g.classList.add('picked'); markWays(i); return; }
       go();
-    });
+    };
+    g.addEventListener('click', activate);
     g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } });
     g.addEventListener('mouseenter', show); g.addEventListener('focus', show);
-    g.addEventListener('mouseleave', () => { if (selIdx !== null) return; hover = null; const old = svg.querySelector('.path'); if (old) old.remove(); });
+    g.addEventListener('mouseleave', hide);
+    pickers.push({ o, i, activate, show, hide, go });
   });
+  renderWays(pickers);
 }
+// the list under the maze: one row for every walk, so what each costs is on the screen before anything is tapped; a row is the same choice as its dot
+function renderWays(pickers) {
+  const box = $('#ways'), list = $('#ways-list'), head = $('#ways-h'), clock = $('#ways-clock'); if (!box || !list) return;
+  list.innerHTML = ''; const rows = pickers.map(p => ({ p, W: wayFacts(G, p.o) }));
+  rows.sort((a, b) => (b.W.exit ? b.W.exit.left : -999) - (a.W.exit ? a.W.exit.left : -999) || a.W.steps - b.W.steps);   // the most left of the allowance at the exit first: the way that costs least by the clock
+  head.textContent = rows.length === 1 ? 'The only way from here' : 'Ways from here (' + rows.length + ')';
+  clock.textContent = (rows.length === 1 ? '' : (touchy() ? 'Tap one to see its path, tap it again to walk. ' : 'Click one to walk it; hover to see its path. ')) + clockWords(G);
+  for (const { p, W } of rows) {
+    const w = wayWords(W), li = document.createElement('li'), b = document.createElement('button'); b.type = 'button'; b.className = 'way ' + W.kind + (selIdx === p.i ? ' picked' : ''); b.dataset.i = p.i; b.setAttribute('aria-pressed', selIdx === p.i ? 'true' : 'false');
+    b.setAttribute('aria-label', (/^\d+$/.test(w.n) ? w.n + ' step' + (w.n === '1' ? '' : 's') + ': ' : '') + w.head + (w.price ? ', ' + w.price : '') + (w.exit ? '. ' + w.exit : ''));
+    b.innerHTML = '<span class="wn"></span><span class="wt"></span><span class="wx"></span>'; b.querySelector('.wn').textContent = w.n; b.querySelector('.wt').textContent = w.head + (w.price ? ', ' + w.price : ''); b.querySelector('.wx').textContent = w.exit;
+    b.addEventListener('click', p.activate); b.addEventListener('mouseenter', p.show); b.addEventListener('focus', p.show); b.addEventListener('mouseleave', p.hide); b.addEventListener('blur', p.hide);
+    li.appendChild(b); list.appendChild(li);
+  }
+  box.hidden = !rows.length;
+}
+function markWays(i) { for (const b of document.querySelectorAll('#ways-list .way')) { const on = b.dataset.i === String(i); b.classList.toggle('picked', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); } }
 function confirmBar(o, go) { const hint = $('#hint'); const b = btn('Walk here', go, 'primary'); b.id = 'walk-here'; hint.appendChild(document.createTextNode(' ')); hint.appendChild(b); }
 function stopBot() { if (botTimer) { clearInterval(botTimer); botTimer = null; } const b = $('#bot'); if (b) b.textContent = 'Watch the bot play'; }
 function toggleBot() { if (botTimer) { stopBot(); return; } if (live()) { askLeave('The bot plays a practice run in its place.', () => { abandonLive(); runBot(); }); return; } runBot(); }
@@ -4213,6 +4516,7 @@ function cardSymbols() {
     if (k === 'foe') SYM.court(svg, c, c, s, 'K♠', 2, false);
     if (k === 'hidden') SYM.court(svg, c, c, s, null);
     if (k === 'elite') { SYM.court(svg, c - 5, c - 3, s, 'Q♥', 0, true); SYM.court(svg, c + 5, c + 3, s, 'J♣', 0, false); }
+    if (k === 'steps') { for (let i = 0; i < 5; i++) el('rect', { x: 5 + i * 11, y: 26, width: 9, height: 9, rx: 2, class: 'hw-box' + (i < 2 ? ' on' : i > 2 ? ' over' : '') }, svg); el('text', { x: 49.5, y: 47, class: 'hw-skull' }, svg, '\u2620'); }
     if (k === 'big') { svg.setAttribute('viewBox', '-4 -4 68 68'); SYM.boss(svg, c, c, 12.5); }
     if (k === 'mark-q') { el('rect', { x: 19, y: 14, width: 22, height: 32, rx: 4, class: 'mark' }, svg); el('text', { x: 30, y: 36, class: 'mark-t' }, svg, '?'); }
   });
@@ -4226,6 +4530,12 @@ window.addEventListener('DOMContentLoaded', () => {
   $('#replay').addEventListener('click', () => { const v = parseInt($('#seed').value, 10), go = () => { const note = abandonLive(); start(isFinite(v) && v > 0 ? v : newSeed(), true, null, buildId(), 'normal', note); }; if (live()) askLeave('A replay is a practice run and takes this run\u2019s place.', go); else go(); });
   $('#bot').addEventListener('click', toggleBot);
   $('#print').addEventListener('click', () => window.print());
+  const rl = $('#rules-link'); if (rl) rl.addEventListener('click', ev => { ev.preventDefault(); openHowto(); });   // without script the button is still a link to the rules card
+  const hs = $('#howto-start'); if (hs) hs.addEventListener('click', closeHowto);
+  const hr = $('#howto-rules'); if (hr) hr.addEventListener('click', closeHowto);   // (the link then goes to the rules card)
+  const hw = $('#howto'); if (hw) hw.addEventListener('click', ev => { if (ev.target === hw) closeHowto(); });
+  window.addEventListener('keydown', ev => { const h = $('#howto'); if (!h || h.hidden) return; if (ev.key === 'Escape') { closeHowto(); return; } if (ev.key === 'Tab') { const f = [...h.querySelectorAll('button, a[href]')]; if (!f.length) return; const a = document.activeElement, i = f.indexOf(a); if (!h.contains || !h.contains(a)) { ev.preventDefault(); f[0].focus(); } else if (ev.shiftKey && i === 0) { ev.preventDefault(); f[f.length - 1].focus(); } else if (!ev.shiftKey && i === f.length - 1) { ev.preventDefault(); f[0].focus(); } } });   // Escape closes it; Tab stays inside it
+  const pc = $('#page-chips'); if (pc) pc.addEventListener('click', ev => { let t = ev.target; while (t && t !== pc && !(t.classList && t.classList.contains('rule'))) t = t.parentNode; if (t && t !== pc) t.classList.toggle('open'); });   // a long rule chip shows two lines on a narrow screen; a tap shows all of it
   refreshBuilds();
   $('#build').addEventListener('change', markBuild);
   const cb = $('#card-builds'); if (cb) for (const b of Object.values(D.CONFIG.builds)) { const li = document.createElement('li'); li.innerHTML = '<b></b> <span></span>'; li.querySelector('b').textContent = b.name + (b.kind ? ' (' + b.kind + '):' : ':'); li.querySelector('span').textContent = b.text; cb.appendChild(li); }
@@ -4239,6 +4549,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const ll = $('#licence-link'); if (ll) ll.addEventListener('click', () => { const d = $('#licence'); if (d) d.open = true; });   // the notice's link opens the licence text under it
   const co = $('#card-offers'); if (co) D.CONFIG.carry.table.forEach((id, i) => { const tr = document.createElement('tr'); tr.innerHTML = '<td></td><td><b></b> <span></span></td>'; tr.children[0].textContent = i + 1; tr.querySelector('b').textContent = D.CONFIG.carry.offers[id].name + ':'; tr.querySelector('span').textContent = D.CONFIG.carry.offers[id].text; co.appendChild(tr); });
   const cx = $('#card-boxes'); if (cx) for (const x of D.CONFIG.carry.boxes) { const li = document.createElement('li'); li.textContent = '☐ ' + x.text + (x.opens ? ' (opens ' + D.CONFIG.builds[x.opens].name + ')' : '') + (x.opensEntry ? ' (opens ' + ENTRY_TEXT[x.opensEntry][0] + ')' : ''); cx.appendChild(li); }
+  fillFightCard(); fillHowto();
   cardSymbols();
   renderLedger();
   let saved = loadRun(), resumed = null; if (saved) { try { resumed = replayRun(saved); } catch (e) { resumed = null; } }
@@ -4248,7 +4559,7 @@ window.addEventListener('DOMContentLoaded', () => {
     render(); renderLedger();
   } else { if (saved) clearRun(); openStart(); }   // a first run starts at once; a Ledger with a gift waiting, or a second build card or way to play open, shows the choice first
 });
-window.CommediaUI = { examAdviceText, examNow, examTally, examLabel, examShort, examHint, examNews, fightCost, keeperNote, keeperNews, guardsHole, KEEP, heatRules };   // the pure text the tests call (the exam's lines, the Heat paragraph); no DOM needed
+window.CommediaUI = { wayFacts, wayWords, clockWords, howtoItems, fightFacts, enemyWords, youWords, fightLead, fightCaption, fightExample, fightCardLead, examAdviceText, examNow, examTally, examLabel, examShort, examHint, examNews, fightCost, keeperNote, keeperNews, guardsHole, KEEP, heatRules };   // the pure text the tests call (the exam's lines, the Heat paragraph); no DOM needed
 })();
 
 </script>
