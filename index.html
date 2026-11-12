@@ -200,6 +200,8 @@ button.quiet { color: var(--muted); }
 button.pcard:hover:not(:disabled), button.pcard.sel { border-color: var(--ov); transform: translateY(-4px); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ov) 40%, transparent); }
 button.pcard:disabled { cursor: default; opacity: 1; }
 .pcard.dim { opacity: .45; }
+.badge.bonus { border-style: dashed; border-color: var(--gold); color: var(--gold); font-size: 14px; }
+.pcard.match { border-color: var(--gold); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 55%, transparent); }
 .foe { display: grid; justify-items: center; gap: 2px; font-size: 12px; color: var(--muted); text-align: center; }
 .foe .cards { flex-wrap: nowrap; }
 .foe.boss { max-width: 220px; justify-items: start; color: var(--bad); font-weight: 700; font-size: 14px; }
@@ -448,6 +450,8 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
       <p id="heat-total" class="small-stat" role="status"></p>
     </div>
     <p class="small-stat"><label><input type="checkbox" id="practice"> Practice run: every character and every way to play (Normal, Hard, Brutal) is open. Nothing is written in the Ledger, and there is no bonus.</label></p>
+    <p class="small-stat" id="hands-row" hidden><label><input type="checkbox" id="hands"> <span id="hands-text">Hands (experimental)</span></label></p>
+    <p class="small-stat" id="keepers-row" hidden><label><input type="checkbox" id="keepers"> <span id="keepers-text">Exit keepers (experimental)</span></label></p>
     <div class="row"><button type="button" id="start-go" class="primary">Start the run</button></div>
   </section>
   <section class="page" id="game">
@@ -536,6 +540,10 @@ a.btn:focus-visible { outline: 3px solid var(--ov); outline-offset: 2px; }
     <ol id="card-fight-example" class="example"></ol>
     <p id="card-fight-after"></p>
     <p><b>The details.</b> Move into an enemy: fight, or pay 4 Energy to let it pass. Pay before the fight starts (or again after a loss); you can never pay a shortfall in Health, so without 4 Energy you fight or walk round. Its total starts at the page’s number; it flips number cards one at a time. After each, if it is above you (hand cards you have played, plus strength, plus 1 if you started from the dark), add hand cards until you are level, or stop: you lose and take its damage. Level after its last card is a win: you draw back up to 5 (an elite also gives its two highest cards, and your lowest goes if you hold more than 5). The cards you played are replaced from the pile, so your hand is full again but not always stronger. After a loss its total is known: fight again with cards that beat it, pay 4 Energy, or walk round. The cards you played in a lost fight are gone, and nothing is drawn back until you win a fight or reach a new page. Against a boss who fights you may always swing blind instead of committing cards: the top number card counts for you. Some bosses allow an Energy flip; see the boss list.</p>
+    <h3 id="card-hands-h" hidden>Hands (experimental)</h3>
+    <p id="card-hands" hidden></p>
+    <h3 id="card-keepers-h" hidden>Exit keepers (experimental)</h3>
+    <p id="card-keepers" hidden></p>
     <h3>The bosses</h3>
     <ul id="card-bosses"></ul>
     <h3>Chapter 1, Inferno: the circles and their terrain</h3>
@@ -1071,7 +1079,7 @@ const CONFIG = {
     { steps: 25, base: 11, hidden: 2 }, { steps: 26, base: 12, hidden: 2 }, { steps: 33, base: 12, hidden: 2 },                                         // 7-9: little slack, two enemies hidden
   ],
   intro: { mazefoe: 2, gate: 2, toll: 2, altar: 3, elite: 4 },   // the first circle each kind of place appears on (the sheets are the same on every page; a page lays only what its circle allows): a first game meets fewer things at once
-  steps: { skull: 4, floorRealm: 0, energyBuy: null /* OFF (study of 11 Nov 2026): { rate, perPage, reserve }: Energy pays a skull, rate Energy instead of 1 Health, at most perPage a page, keeping reserve Energy back */ },     // every 4th step past the allowance costs 1 Health (an Inferno page never allows under 4 steps; a Purgatory or Paradise page's header may say as little as floorRealm, Step P5)
+  steps: { skull: 4, floorRealm: 0, energyBuy: null /* OFF (study of 11 Nov 2026): { rate, perPage, reserve }: Energy pays a skull, rate Energy instead of 1 Health, at most perPage a page, keeping reserve Energy back */, chaser: null /* OFF (balance study, 12 Nov 2026): { pool: 'all' | 'low' }: a skull is not a Health point but a chaser: a court card turns up beside you and you fight it where you stand, let it pass (the pass price), or stop (its blow); 'low' = Jacks, Queens and Furies only. See docs/balance/NOTE.md */ },     // every 4th step past the allowance costs 1 Health (an Inferno page never allows under 4 steps; a Purgatory or Paradise page's header may say as little as floorRealm, Step P5)
   bosses: {                // a 3x3 boss sits over the hole in his page's exit corner; the hole opens when he falls
     3: { name: 'Cerberus', hits: 3, bonus: 0, miss: 1, energy: 4 },
     9: { name: 'Lucifer', hits: 4, bonus: 2, miss: 1, energy: 0, turn: 4 },   // turn: Energy for one turn of the top number card, once an attack, any time you are short (it counts for you)
@@ -1188,6 +1196,26 @@ const CONFIG = {
     open: ['pilgrim'],     // the build cards a fresh Ledger shows: the first game is the plain game
     entries: ['normal'],   // the entry points a fresh Ledger shows: Hard opens with the first chapter won, Brutal with the second (a box's opensEntry)
   },
+  hands: {                 // Hands (poker-lite): matching number cards count extra, for you and for the enemies. OFF unless a run asks: newGame(seed, build, { hands: true }) or { hands: { mode: 'all' } }, or LAB_CFG {"hands":{"on":true}}. See docs/hands/NOTE.md
+    on: false,
+    mode: 'match',         // 'match': only the cards that match are multiplied; 'all': the whole total is
+    sides: 'both',         // who plays Hands: 'both', 'foes' (the enemies only) or 'you'
+    from: 4,               // counts from this circle (level) on; before it a total is the plain sum
+    foeStart: { 1: 6, 2: 10, 3: 10 },   // the price of your combos: ordinary enemies start this much higher from circle 4 on, while Hands apply to them; a number for every chapter, or a table by chapter. Fitted 12 Nov 2026. Inferno (lab/balance-sets-8.js, plain game): with 0 a regular wins 50 in 100 against 29 (the first game 16 against 14, an expert 47 against 46); with 6 about +2 / +7 / -8 (with the exit keepers +1 / +10 / -3). Purgatory and Paradise (balance-sets-10 and -11, Hard and Brutal): Hands without a price lift a regular from 4-5 in 100 to 55-66, 6 still gives 24-25, 10 gives 4 (Hard) and 13 (Brutal) with an expert at 14 and 12 against 22 and 12
+    number: { 2: 1.5, 3: 2, 4: 3 },            // cards of the same number: how many -> the multiplier (more cards count as the last row)
+    suit: { 3: 1.5, 4: 2, 5: 3 },              // cards of the same suit
+    run: { 3: 1.5, 4: 2, 5: 3 },               // numbers in a row (5 6 7): this many different numbers, one after another
+    colour: { 3: 1.25, 4: 1.5, 5: 2 },         // cards of one colour (black or red): this many of them (from three: from four they land 0.2 times a game, from three 1.6, as often as a run; lab/balance-sets-7.js)
+    parity: { 3: 1.25, 4: 1.5, 5: 2 },         // cards that are all even (2 4 6 8 10) or all odd (3 5 7 9): this many of them
+    loot: 1,               // after a win: take this many of its flipped cards into your hand, your choice (an elite gives its own number)
+    swap: { price: 2, max: 2 },                // in a fight: pay Energy, drop a hand card of your choice, draw the top number card; at most `max` a fight (null: no swap)
+  },
+  keepers: {               // Exit keepers (balance study, 12 Nov 2026, docs/balance/NOTE.md): the package that makes fights end as many runs as the clock does. A per-run switch, OFF unless a run asks: newGame(seed, build, { keepers: true }) or { keepers: { from: 5 } }, or LAB_CFG {"keepers":{"on":true}}; on the screen add #keepers to the page address (a practice run)
+    on: false,
+    from: 4,               // a face-up keeper stands on the exit of every Inferno page from this circle on (not the boss pages): beat it or pay to let it pass, no way round it
+    steps: { 4: 1, 5: 4, 6: 2, 7: 4, 8: 4, 9: 2 },   // more steps on those circles' pages (where the clock binds: on circles 5, 7 and 8 the shortest way is already over the allowance)
+    bossMiss: { 3: 1, 9: 1 },                          // a lost boss round costs this much more (Cerberus, depth 3, and Lucifer, depth 9)
+  },
   run: null,               // one run's setup for every game (the lab's way in: LAB_CFG {"run":{"offer":"stout"}} or {"run":{"entry":"hard"}} or {"run":{"chapter":3,"gifts":["tough"]}} or {"run":{"heat":["foes","short1"]}}); see newGame
   heat: root.CommediaHeat ? JSON.parse(JSON.stringify(root.CommediaHeat.DATA)) : null,   // Heat: the burdens a run may tick, their numbers, the cap (src/heat.js; a LAB_CFG patch merges into one tick; null = no Heat)
   depths: 29,              // Step P5: levels in all: Inferno 9, Purgatory 10, Paradise 10. A level's depth (1-29) is what fl.level and G.deepest count
@@ -1198,6 +1226,7 @@ const CONFIG = {
   shutDoor: true,          // Paradise: the door taken on the last page is shut on this one
   keeper: 'all',           // 'brutal' or 'all' (null = none) puts a face-up enemy on the hole square of every Paradise door (fight it, or pay to let it pass; no way round); keeperBonus adds to ITS start and blows only
   keeperBonus: { base: 0, blows: 0 },
+  keeperInferno: null,     // OFF (balance study, 12 Nov 2026): { from } puts a face-up keeper on the hole square of every Inferno page from that circle on (not the boss pages): fight it or pay to let it pass, no way round; keeperBonus adds to its start and blows. See docs/balance/NOTE.md
   brutalClock: 0,          // lab only: extra steps on every Paradise page in a Brutal run (a Brutal-only line on the printed note); the pages' own steps are shared by all three modes
   realmPrint: false,       // false (the rule): Purgatory and Paradise are laid like Inferno, from six clear tiles of each size picked by dice (face by the page's parity, see setupFaces); true = the 18 Purgatory grids and 36 Paradise doors printed on their pages, one fixed maze each (src/realms.js PRINTED; the rule from 2026-11-05 to 2026-11-09, kept for the lab)
   setupFaces: 'circle',    // how a sheet's face is chosen when a page is set up: 'circle' = face up on odd circles, terraces and spheres, face down on even ones (one pair of dice picks the maze and room sheets, or the two tiles); 'roll' = a second die for every sheet, as before
@@ -1964,14 +1993,14 @@ function handMax(G) { const hb = G.handBonus; return lever(G, 'hand', CONFIG.sta
 // given and 1 when not: a game with no run object is the Inferno of Steps P1-P4), plus { offer } (Normal only) and { state: { strength, hand: [ranks] } } (the lab replays an arrival state)
 function runSpec(R) {
   const E = { normal: 1, hard: 2, brutal: 3 };
-  if (!R) return { chapter: 1, gifts: [], until: 1, state: null, entry: 'normal', offer: null, wins: [] };
+  if (!R) return { chapter: 1, gifts: [], until: 1, state: null, entry: 'normal', offer: null, wins: [], hands: null };
   if (R.entry !== undefined && !E[R.entry]) throw new Error('unknown way to play: ' + R.entry);
   const chapter = R.chapter || (R.entry ? E[R.entry] : 1);
   if (!(chapter >= 1 && chapter <= 3) || chapter !== Math.floor(chapter)) throw new Error('chapter must be 1, 2 or 3, not ' + chapter);
   const entry = R.entry || (chapter === 1 ? 'normal' : chapter === 2 ? 'hard' : 'brutal'), until = Math.max(chapter, Math.min(3, R.until || (R.entry || R.chapter ? 3 : 1)));
   const gateG = CONFIG.gateGifts || [1, 1], maxGifts = chapter === 1 ? 0 : chapter === 2 ? gateG[0] : gateG[0] + gateG[1], gifts = (R.gifts || []).filter(g => CONFIG.gifts[g]).slice(0, maxGifts);   // never more gifts than the chapters before it would have given (audit F9)
   const st = R.state ? { strength: R.state.strength, hand: (R.state.hand || []).filter(r => r >= 2 && r <= 10).slice(0, CONFIG.start.hand + 1) } : null;
-  return { chapter, gifts, until, state: st, entry, offer: entry === 'normal' ? R.offer || null : null, wins: Array.isArray(R.wins) ? R.wins.filter(c => c >= 1 && c < chapter) : [] };   // an Offer is for Normal runs only
+  return { chapter, gifts, until, state: st, entry, offer: entry === 'normal' ? R.offer || null : null, wins: Array.isArray(R.wins) ? R.wins.filter(c => c >= 1 && c < chapter) : [], hands: R.hands || null, keepers: R.keepers || null };   // an Offer is for Normal runs only; hands: Hands (poker-lite), see CONFIG.hands
 }
 function newGame(seed, build, run) {
   const id = build !== undefined && build !== null ? build : CONFIG.build, B = buildOf(id), L = B.lever || {}, S = CONFIG.start;
@@ -1989,6 +2018,8 @@ function newGame(seed, build, run) {
   for (const g of spec.gifts) applyGift(G, g);   // a chapter entered directly holds fewer gifts than the chapters before it would have given (none, on Hard and Brutal)
   if (HP) { applyOffer(G, HP.fx); addMods(G.mods, HP.mods); G.heat = HP.ids; if (HP.event) G.heatEvent = HP.event; }   // Heat: the patch, through the Offer's own appliers; G.heat is the run record's tick set
   else if (HEAT && R && R.heat && R.heat.length && spec.entry === 'normal' && spec.wins.includes(1)) { G.heat = HEAT.plan(R.heat, id).ids; G.heatLifted = true; }   // Heat: a run resumed after chapter 1 keeps the record of its set, not the burdens
+  G.hands = handsSettings(spec.hands);   // Hands (poker-lite): null unless the run asks (or LAB_CFG turns it on)
+  G.keepers = keepersSettings(spec.keepers); if (G.keepers) addMods(G.mods, { steps: G.keepers.steps, bossMiss: G.keepers.bossMiss });   // Exit keepers: null unless the run asks; the extra steps and the boss bite ride on the run's own modifiers (as an Offer's steps do), the keeper itself is laid by layPage
   if (spec.state) {   // the lab replays an arrival state: the strength and the hand's numbers
     if (spec.state.strength !== undefined) G.strength = Math.min(S.maxStrength, spec.state.strength);
     if (spec.state.hand) for (const r of spec.state.hand) { const i = G.piles.numbers.findIndex(c => c.rank === r); if (i >= 0) G.hand.push(G.piles.numbers.splice(i, 1)[0]); }
@@ -2000,6 +2031,7 @@ function newGame(seed, build, run) {
     : spec.chapter === 2 ? 'You come to the shore of the mountain of Purgatory, and climb the left-hand pages.' : 'You rise through the spheres of Paradise, up the right-hand pages towards the first page of the book.', 'event');
   if (offer) log(G, 'Virgil\u2019s bonus, taken: ' + CONFIG.carry.offers[offer].name + '. ' + CONFIG.carry.offers[offer].text, 'event');
   if (HP) log(G, 'Heat ' + HP.heat + ': ' + HP.names.join(', ') + '.', 'event');
+  if (G.hands) log(G, 'Hands are on from circle ' + G.hands.from + ': ' + handsRules(G.hands) + '.', 'event');
   return G;
 }
 // a bonus of Virgil's Offer changes this run's starting numbers or rules a little (see CONFIG.carry.offers); it is gone when the run ends
@@ -2157,11 +2189,11 @@ function numberOdds(G) {
 function handSum(G) { return G.hand.reduce((a, c) => a + c.rank, 0); }
 function takeCard(G, c) {
   if (!c) return null; G.hand.push(c); G.hand.sort((a, b) => b.rank - a.rank);
-  if (G.hand.length > handMax(G)) { const out = G.hand.pop(); discard(G, out); return out; }
+  if (G.hand.length > handMax(G)) { if (handsApply(G, 'you')) { askDrop(G); return null; } const out = G.hand.pop(); discard(G, out); return out; }   // Hands: you choose the card that goes
   return null;
 }
 function refill(G, why) {
-  while (G.hand.length > handMax(G)) discard(G, G.hand.pop());   // a hand that was bigger for a while (Spare card) falls back to its size
+  while (G.hand.length > handMax(G)) { const Hh = handsApply(G, 'you'); if (Hh && G.pending && G.pending.id === 'drop') break; discard(G, Hh ? G.hand.splice(leastUseful(Hh, G.hand), 1)[0] : G.hand.pop()); }   // a hand that was bigger for a while (Spare card) falls back to its size (Hands: the card that scores least goes)
   const before = G.hand.length; let n = 0;
   while (G.hand.length < handMax(G)) { const c = draw(G, 'numbers'); if (!c) break; G.hand.push(c); n++; }
   G.hand.sort((a, b) => b.rank - a.rank);
@@ -2169,9 +2201,116 @@ function refill(G, why) {
 }
 function findCard(G, c) { return G.hand.findIndex(h => h.rank === c.rank && h.suit === c.suit); }
 function playCards(G, cs) { const out = []; for (const c of cs) { const i = findCard(G, c); if (i >= 0) out.push(G.hand.splice(i, 1)[0]); } G.stats.cardsPlayed += out.length; return out; }
-// the least sets of hit cards that reach the gap: every set whose total reaches it and that no smaller set does (by value; suits don't matter)
-function covers(hand, gap) {
+// ---------- Exit keepers (docs/balance/NOTE.md): a keeper on every Inferno exit from a circle on, more steps where the clock binds, a harsher boss. A per-run switch, like Hands ----------
+function keepersSettings(R) {
+  const K = CONFIG.keepers; if (!K || (!K.on && !R)) return null;
+  const s = JSON.parse(JSON.stringify(K)); if (R && typeof R === 'object') merge(s, R); s.on = true; s.steps = s.steps || {}; s.bossMiss = s.bossMiss || {};
+  return s;
+}
+// the package in words, from the settings and nothing else (the rules card, the one-time note and the tests read this one function)
+function keepersRules(K) {
+  const nums = o => Object.keys(o || {}).map(Number).sort((a, b) => a - b).filter(k => o[k]), plus = v => (v > 0 ? '+' : '−') + Math.abs(v);
+  const st = nums(K.steps).map(c => 'circle ' + c + ' ' + plus(K.steps[c])), bs = nums(K.bossMiss).map(d => (CONFIG.bosses[d] ? CONFIG.bosses[d].name : 'the boss') + ' ' + plus(K.bossMiss[d]));
+  return 'From circle ' + K.from + ' a keeper stands on the exit of every page (not the boss pages), face up: beat it, or pay ' + CONFIG.fight.pass + ' Energy to let it pass, and you drop through the hole. There is no way round it.' +
+    (st.length ? ' The pages allow more steps (' + st.join(', ') + ').' : '') + (bs.length ? ' A lost boss round costs more Health (' + bs.join(', ') + ').' : '');
+}
+// ---------- Hands (poker-lite): matching number cards count extra. OFF unless the run asks (newGame run option { hands: true | { patch } }, or LAB_CFG {"hands":{"on":true}}); docs/hands/NOTE.md ----------
+// The same number (a pair, three, four), the same suit, numbers in a row (a run), cards of one colour, or cards that are all even or all odd. It scores the number cards a side shows in one fight: the ones you play and the blind ones an enemy flips.
+// The best single match counts. mode 'match': only the cards in the match are multiplied; 'all': the whole total is. A fraction rounds up. Before circle `from`, or with Hands off, a total is the plain sum.
+// Every kind reads as "this many cards of it among the cards shown" (a group inside the hand), so more cards never take a match away: a total never falls when a card is added or flipped.
+const HAND_KINDS = ['number', 'suit', 'run', 'colour', 'parity'];   // the kinds of match; of two matches that add the same, the first in this order is named
+function handsSettings(R) {
+  const H = CONFIG.hands; if (!H || (!H.on && !R)) return null;
+  const s = JSON.parse(JSON.stringify(H)); if (R && typeof R === 'object') merge(s, R); s.on = true;
+  for (const k of HAND_KINDS) s[k] = s[k] || {};   // (a LAB_CFG null removes a kind of match: an empty table counts nothing)
+  return s;
+}
+function handsApply(G, side) {   // the settings when `side` ('you' or 'foe') plays Hands on this page, else null
+  const H = G && G.hands; if (!H || !G.floor || G.floor.level < H.from) return null;
+  return H.sides === 'both' || H.sides === (side === 'foe' ? 'foes' : 'you') ? H : null;
+}
+// the price of your combos (CONFIG.hands.foeStart): ordinary enemies start this much higher while Hands apply to them, from circle 4 on (a #hands=1 run counts matches from circle 1 but keeps the plain starts on circles 1 to 3, so a first fight still shows a match)
+function foePrice(G, lv) { const H = handsApply(G, 'foe'); if (!H || !H.foeStart || lv < 4) return 0; const f = H.foeStart; return typeof f === 'number' ? f : (f[chapterOf(lv)] || 0); }   // (a number for every chapter, or a table { chapter: number })
+function handRow(table, n) { let m = 1; for (const k of Object.keys(table || {}).map(Number).sort((a, b) => a - b)) if (n >= k) m = table[k]; return m; }
+const isRed = c => c.suit === 'H' || c.suit === 'D';
+function handGroups(kind, cs) {   // the groups of cards that could be a match of this kind: one group for each number, suit, colour or parity, and each run of numbers in a row (a run takes one card of each number)
+  if (kind === 'run') {
+    const byRank = {}; for (const c of cs) if (!byRank[c.rank]) byRank[c.rank] = c;
+    const out = []; let cur = []; for (let r = 2; r <= 10; r++) { if (byRank[r]) cur.push(byRank[r]); else { if (cur.length) out.push(cur); cur = []; } } if (cur.length) out.push(cur);
+    return out;
+  }
+  const f = kind === 'number' ? c => c.rank : kind === 'suit' ? c => c.suit : kind === 'colour' ? c => (isRed(c) ? 'r' : 'b') : c => c.rank % 2, m = {};
+  for (const c of cs) (m[f(c)] = m[f(c)] || []).push(c);
+  return Object.values(m);
+}
+function handMatch(H, cs) {   // the best match among number cards: { kind: 'number' | 'suit' | 'run' | 'colour' | 'parity' | null, mult, cards (the match), n, extra (the points it adds) }
+  let best = { kind: null, mult: 1, cards: [], n: 0, extra: 0 }; if (!H || cs.length < 2) return best;
+  const sum = cs.reduce((a, c) => a + c.rank, 0);
+  for (const kind of HAND_KINDS) for (const g of handGroups(kind, cs)) {
+    const mult = handRow(H[kind], g.length); if (!(mult > 1)) continue;
+    const base = H.mode === 'all' ? sum : g.reduce((a, c) => a + c.rank, 0), extra = Math.ceil((mult - 1) * base - 1e-9);
+    if (extra > best.extra || (extra === best.extra && mult > best.mult)) best = { kind, mult, cards: g, n: g.length, extra };
+  }
+  return best;
+}
+function handScore(H, cs) { const sum = cs.reduce((a, c) => a + c.rank, 0); return H ? sum + handMatch(H, cs).extra : sum; }
+function handStat(G, side, m) { if (!m || !m.kind) return; const S = G.stats.hands || (G.stats.hands = { you: {}, foe: {} }), o = S[side][m.kind] || (S[side][m.kind] = [0, 0]); o[0]++; o[1] += m.extra; }   // the lab's record of which matches land: [times, points they added]
+// a match in words: "a pair of 7s ×1.5", "3 hearts ×1.5", "a run of 3 (5-6-7) ×1.5", "4 red ×1.25", "4 even ×1.25"
+function handName(m) {
+  if (!m || !m.kind) return '';
+  const x = ' ×' + m.mult, c0 = m.cards[0];
+  if (m.kind === 'number') return (m.n === 2 ? 'a pair of ' : m.n === 3 ? 'three ' : 'four ') + c0.rank + 's' + x;
+  if (m.kind === 'suit') return m.n + ' ' + SUIT_NAME[c0.suit].toLowerCase() + x;
+  if (m.kind === 'run') return 'a run of ' + m.n + ' (' + m.cards.map(c => c.rank).join('-') + ')' + x;
+  if (m.kind === 'colour') return m.n + ' ' + (isRed(c0) ? 'red' : 'black') + x;
+  return m.n + ' ' + (c0.rank % 2 ? 'odd' : 'even') + x;
+}
+function handNote(H, cs) { const n = H && cs.length > 1 ? handName(handMatch(H, cs)) : ''; return n ? ' (' + n + ')' : ''; }
+// the enemy price in words: "6 higher" for one number, or "6 higher in Inferno and 10 higher in Purgatory and Paradise" for a table by chapter
+function foeStartWords(f) {
+  if (typeof f === 'number') return f + ' higher';
+  const by = new Map(); for (const [c, name] of [[1, 'Inferno'], [2, 'Purgatory'], [3, 'Paradise']]) if (f[c]) by.set(f[c], (by.get(f[c]) || []).concat(name));
+  return [...by.entries()].map(([n, names]) => n + ' higher in ' + names.join(' and ')).join(' and ');
+}
+// the rules in words, from the table and nothing else (the rules card, the first line of a run and the tests read this one function)
+function handsRules(H) {
+  const x = m => '×' + m, row = t => Object.keys(t).map(Number).sort((a, b) => a - b).filter(k => t[k] > 1).map((k, i, a) => k + (i === a.length - 1 ? '+' : '') + ' ' + x(t[k])).join(', ');   // "2 ×1.5, 3 ×2, 4+ ×3": more cards count as the last row
+  const WORDS = { number: 'the same number', suit: 'the same suit', run: 'numbers in a row, like 5 6 7', colour: 'cards of one colour, red or black', parity: 'cards that are all even or all odd' };
+  const parts = []; for (const k of HAND_KINDS) if (row(H[k] || {})) parts.push(WORDS[k] + ' (' + row(H[k]) + ')');
+  const who = H.sides === 'foes' ? 'for the enemies' : H.sides === 'you' ? 'for you' : 'for you and for the enemies';
+  if (!parts.length) return 'no card counts extra';
+  return 'cards that match count extra, ' + who + ': ' + (parts.length > 1 ? parts.slice(0, -1).join(', ') + ', or ' + parts[parts.length - 1] : parts[0]) + '. The best one counts, ' +
+    (H.mode === 'all' ? 'and it multiplies the whole total' : 'and it multiplies only the cards in the match') + ', rounded up' + (H.foeStart && H.sides !== 'you' ? '. Enemies start ' + foeStartWords(H.foeStart) + ', from circle 4' : '');
+}
+function leastUseful(H, hand) {   // the card whose going costs the hand's score least (a tie: the lowest card)
+  const all = handScore(H, hand); let bi = hand.length - 1, bv = Infinity;
+  for (let i = hand.length - 1; i >= 0; i--) { const v = all - handScore(H, hand.filter((_, j) => j !== i)); if (v < bv) { bv = v; bi = i; } }
+  return bi;
+}
+function askDrop(G) {   // a hand over its size: you choose the card that goes
+  if (G.pending && G.pending.id === 'drop') return;
+  ask(G, 'Your hand holds ' + G.hand.length + ' cards and ' + handMax(G) + ' fit. Which one do you drop?', G.hand.map(c => ({ label: 'Drop ' + cardName(c), act: 'drop', card: { rank: c.rank, suit: c.suit } })), 'drop', null);
+}
+// an enemy's total now: its start (and die) plus its flipped cards, scored
+function foeIts(G, f) { const H = handsApply(G, 'foe'); return f.its0 + (H ? handScore(H, f.turned) : f.turned.reduce((a, c) => a + c.rank, 0)); }
+// the least sets with Hands: every set of hand cards whose score (with the cards already played) adds up to the gap, and from which no single card can be left out. Suits matter now, so no set is dropped as a twin.
+function coversH(hand, gap, ctx) {
+  const H = ctx.H, played = ctx.played || [], n = hand.length, have = handScore(H, played), gain = new Array(1 << n).fill(0), out = [];
+  for (let m = 1; m < (1 << n); m++) { const cs = []; for (let i = 0; i < n; i++) if (m >> i & 1) cs.push(hand[i]); gain[m] = handScore(H, played.concat(cs)) - have; }
+  for (let m = 1; m < (1 << n); m++) {
+    if (gain[m] < gap) continue;
+    let least = true; for (let i = 0; i < n && least; i++) if (m >> i & 1) { const m2 = m & ~(1 << i); if (m2 && gain[m2] >= gap) least = false; }
+    if (!least) continue;
+    const cs = []; for (let i = 0; i < n; i++) if (m >> i & 1) cs.push(hand[i]); out.push({ cs, gain: gain[m] });
+  }
+  const sum = cs => cs.reduce((a, c) => a + c.rank, 0);
+  out.sort((a, b) => sum(a.cs) - sum(b.cs) || a.cs.length - b.cs.length || b.gain - a.gain);
+  return out.map(x => x.cs);
+}
+// the least sets of hit cards that reach the gap: every set whose total reaches it and that no smaller set does (by value; suits don't matter; ctx { H, played }: with Hands, see coversH)
+function covers(hand, gap, ctx) {
   if (gap <= 0) return [[]];
+  if (ctx && ctx.H) return coversH(hand, gap, ctx);
   const n = hand.length, out = [], seen = new Set();
   for (let m = 1; m < (1 << n); m++) {
     let s = 0, lo = 99; for (let i = 0; i < n; i++) if (m >> i & 1) { s += hand[i].rank; if (hand[i].rank < lo) lo = hand[i].rank; }
@@ -2299,6 +2438,7 @@ function layPage(G, fl) {
   for (const it of sh.items) { const [X, Y] = tPoint(it.x, it.y, or); place(it, X, Y, 'maze'); }
   if (B.rooms && fl.roomSetup) { const rs = B.rooms[fl.roomSetup[0] - 1], ro = flowOrient(pg.hole, fl.roomSetup[1] >= 4); for (const it of rs.items) { const [X, Y] = tPoint(it.x, it.y, ro); place(it, X, Y, 'room'); } }
   if (pg.boss && !G.bossBeaten[bossKey(pg)]) { const b = bossAt(pg.level); fl.enemies.push({ id: ++id, kind: 'boss', x: pg.bossAt[0], y: pg.bossAt[1], name: b.name, alive: true }); }
+  const KI = G.keepers || CONFIG.keeperInferno; if (KI && pg.level >= KI.from && !pg.boss) fl.enemies.push({ id: ++id, kind: 'foe', n: 0, x: pg.hole[0], y: pg.hole[1], card: null, cards: null, alive: true, known: null, from: 'keeper', keeper: true, up: true });   // the lab's keeper switch: a face-up keeper on the hole square, as in Paradise (no way round: fight it or pay to let it pass)
   fl.enemies.sort((p, q) => (p.kind === 'boss') - (q.kind === 'boss') || (p.n || 9) - (q.n || 9));
 }
 // the court cards of a page: dealt face up by each numbered enemy (①②③, in order) and the elite (two); the hidden one is drawn when you meet it.
@@ -2319,13 +2459,13 @@ function dealCourt(G, fl) {
   const more = mod(G, 'hidden', fl.page.level), unseen = more ? new Set(fl.enemies.filter(e => e.kind === 'foe' && e.n && !hidBy(e)).sort((a, b) => b.n - a.n).slice(0, more)) : null;   // Heat (Unseen): this many more numbered enemies face down, the highest numbers first
   for (const e of fl.enemies) {
     if (e.kind === 'foe') {
-      e.hidden = hidBy(e) || !!(unseen && unseen.has(e));
+      e.hidden = e.up ? false : hidBy(e) || !!(unseen && unseen.has(e));
       if (!e.hidden || seer) { e.card = drawCourt(G); if (e.hidden) e.seen = true; }
     }
     if (e.kind === 'elite') { e.cards = [drawCourt(G), drawCourt(G)]; }
   }
   if (seer) for (const row of fl.cells) for (const c of row) if (c.mark && c.mark.t === '?') c.mark.card = draw(G, 'numbers');
-  const shown = fl.enemies.filter(e => e.card || e.cards).map(e => (e.kind === 'elite' ? 'the elite ' + cardsText(e.cards) : (e.n && !e.hidden ? NUMS4[e.n - 1] + ' ' : 'a hidden one: ') + cardName(e.card)));
+  const shown = fl.enemies.filter(e => e.card || e.cards).map(e => (e.kind === 'elite' ? 'the elite ' + cardsText(e.cards) : e.up ? 'the exit keeper ' + cardName(e.card) : (e.n && !e.hidden ? NUMS4[e.n - 1] + ' ' : 'a hidden one: ') + cardName(e.card)));
   const hid = fl.enemies.filter(e => e.kind === 'foe' && !e.card).length;
   if (shown.length || hid) log(G, 'Enemies dealt face up: ' + (shown.join(', ') || 'none') + '.' + (hid ? ' ' + hid + (hid > 1 ? ' stay' : ' stays') + ' face down.' : ''), 'event');
 }
@@ -2371,7 +2511,10 @@ function spend(G, n, why) {
   if (fl.clockStopped) return;   // the step clock stops when you reach a boss and stays stopped: no skulls after he falls
   const over = Math.max(0, fl.steps - A), skulls = Math.floor(over / k) - Math.floor(before / k);
   if (over > before) G.stats.overSteps += over - before;
-  if (skulls > 0) { G.stats.skulls += skulls; hurt(G, skulls, 'steps'); log(G, (why ? why + ': ' : '') + 'step ' + fl.steps + ' of ' + A + ' on this page: ' + skulls + (skulls > 1 ? ' skulls' : ' skull') + ', −' + skulls + ' Health.', 'bad'); dead(G); }
+  const CHs = CONFIG.steps.chaser;
+  if (skulls > 0 && CHs) { G.stats.skulls += skulls; log(G, (why ? why + ': ' : '') + 'step ' + fl.steps + ' of ' + A + ' on this page: ' + (skulls > 1 ? skulls + ' chasers catch' : 'a chaser catches') + ' up with you.', 'bad'); for (let i = 0; i < skulls; i++) G.queue.unshift({ op: 'chase' }); }   // (the lab's chaser switch: every skull-th step past the allowance is paid in a fight, not in Health ...)
+  else if (skulls > 0) { G.stats.skulls += skulls; hurt(G, skulls, 'steps'); log(G, (why ? why + ': ' : '') + 'step ' + fl.steps + ' of ' + A + ' on this page: ' + skulls + (skulls > 1 ? ' skulls' : ' skull') + ', −' + skulls + ' Health.', 'bad'); dead(G); }
+  if (CHs && CHs.bite) { const bites = Math.floor(over / CHs.bite) - Math.floor(before / CHs.bite); if (bites > 0) { hurt(G, bites, 'steps'); log(G, (why ? why + ': ' : '') + 'step ' + fl.steps + ' of ' + A + ' on this page: ' + bites + (bites > 1 ? ' skulls' : ' skull') + ', −' + bites + ' Health.', 'bad'); dead(G); } }   // ... and, optionally, every `bite`-th step still costs a Health point
 }
 function stepsLeft(G) { return allowance(G) - G.floor.steps; }
 
@@ -2562,7 +2705,10 @@ function doOp(G, q) {
     case 'mark': luck(G); return;
     case 'square': square(G); return;
     case 'endTurn': endTurn(G); return;
-    case 'ask': ask(G, q.prompt, q.options, q.id, q.data); return;
+    case 'ask': if (q.id === 'drop' && G.hand.length <= handMax(G)) return; ask(G, q.prompt, q.options, q.id, q.data); return;   // (a drop question that is no longer needed is skipped)
+    case 'loot': askLoot(G, q); return;
+    case 'winEnd': winEnd(G, G.floor.enemies[q.at]); return;
+    case 'chase': chase(G); return;
   }
   throw new Error('unknown op ' + q.op);
 }
@@ -2578,11 +2724,27 @@ function resolve(G, p, o) {
     case 'pass': passFoe(G, fl.enemies[p.data.at]); return;
     case 'leave': G.stats.left++; log(G, 'You leave it where it stands.', 'event'); return;
     case 'cover': coverKnown(G, fl.enemies[p.data.at], o.cards); return;
-    case 'add': { const cs = playCards(G, o.cards); G.fight.played.push(...cs); log(G, 'You add ' + cardsText(cs) + ': you have ' + fightMine(G) + '.', 'fight'); fightStep(G); return; }
+    case 'add': { const cs = playCards(G, o.cards); G.fight.played.push(...cs); log(G, 'You add ' + cardsText(cs) + ': you have ' + fightMine(G) + handNote(handsApply(G, 'you'), G.fight.played) + '.', 'fight'); fightStep(G); return; }
     case 'buy': { const B = CONFIG.fight.buy; spendE(G, B.price); const c = draw(G, 'numbers'); G.fight.bought = (G.fight.bought || 0) + 1; G.stats.bought = (G.stats.bought || 0) + 1; if (c) { G.hand.push(c); G.hand.sort((a, b) => b.rank - a.rank); } log(G, 'You buy a card: −' + B.price + ' Energy, ' + (c ? cardName(c) : 'nothing') + ' into your hand.', 'fight'); fightStep(G); return; }
     case 'swing': { const c = draw(G, 'numbers'); G.fight.played.push(c); G.fight.swung = true; log(G, 'You swing blind with the top number card, ' + cardName(c) + ': you have ' + fightMine(G) + (fightMine(G) < G.fight.its ? ', short of him: round lost.' : '.'), 'fight'); fightStep(G); return; }
     case 'energyTurn': { const b = bossAt(G.floor.level), c = draw(G, 'numbers'); spendE(G, b.turn); G.fight.paid = true; if (c) G.fight.played.push(c); log(G, 'You pay ' + b.turn + ' Energy and flip ' + (c ? cardName(c) : 'nothing') + ': you have ' + fightMine(G) + '.', 'fight'); fightStep(G); return; }
     case 'stop': fightLost(G); return;
+    case 'drop': { const i = findCard(G, o.card); if (i >= 0) { const c = G.hand.splice(i, 1)[0]; discard(G, c); log(G, 'You drop ' + cardName(c) + ' to the discards.', 'event'); } if (G.hand.length > handMax(G)) askDrop(G); return; }
+    case 'loot': {   // Hands: you take one of the cards it flipped
+      const d = p.data, c = d.pool.find(x => x.rank === o.card.rank && x.suit === o.card.suit), rest = d.pool.filter(x => x !== c);
+      if (c) { G.stats.cardsWon++; log(G, 'You take ' + cardName(c) + ' into your hand.', 'good'); }
+      if (c && d.left > 1 && rest.length) G.queue.unshift({ op: 'loot', at: d.at, pool: rest, left: d.left - 1 }); else for (const x of rest) discard(G, x);
+      if (c) takeCard(G, c);
+      return; }
+    case 'lootNone': for (const x of p.data.pool) discard(G, x); log(G, 'You take none of its cards.', 'event'); return;
+    case 'swap': ask(G, 'Swap a card: you pay ' + handsApply(G, 'you').swap.price + ' Energy, drop the card you choose and draw the top number card.', G.hand.map(c => ({ label: 'Drop ' + cardName(c), act: 'swapDrop', card: { rank: c.rank, suit: c.suit } })).concat([{ label: 'Keep your hand', act: 'swapNo' }]), 'swapDrop', { at: G.fight.at }); return;
+    case 'swapNo': fightStep(G); return;
+    case 'swapDrop': {
+      const Hs = handsApply(G, 'you'), i = findCard(G, o.card); if (!Hs || !Hs.swap || i < 0) { fightStep(G); return; }
+      const c = draw(G, 'numbers'); if (!c) { log(G, 'The number pile and its discards are empty: nothing is swapped and nothing is paid.', 'fight'); fightStep(G); return; }   // (drawn before the dropped card is discarded, so it cannot come straight back)
+      spendE(G, Hs.swap.price); const out = G.hand.splice(i, 1)[0]; discard(G, out); G.hand.push(c); G.hand.sort((a, b) => b.rank - a.rank);
+      G.fight.swapped = (G.fight.swapped || 0) + 1; G.stats.swapped = (G.stats.swapped || 0) + 1;
+      log(G, 'You swap: \u2212' + Hs.swap.price + ' Energy, ' + cardName(out) + ' goes to the discards and you draw ' + cardName(c) + '.', 'fight'); fightStep(G); return; }
     case 'fountain': drinkFountain(G, o.take); return;
     case 'rest': { const h = give(G, 'health', restHeal(G)); G.stats.rooms.rest = (G.stats.rooms.rest || 0) + 1; log(G, 'You rest: ' + h + ', for ' + CONFIG.rooms.restSteps + ' steps.', 'good'); spend(G, CONFIG.rooms.restSteps, 'The rest'); return; }
     case 'altar': altar(G, o.buy); return;
@@ -2669,13 +2831,13 @@ function foeSpec(G, e, level) {
   if (e.kind === 'boss') { const b = bossFor(G, lv); return { k: b.cards || 1, die: false, start: b.bonus + mod(G, 'bossBonus', lv), blows: b.miss + mod(G, 'bossMiss', lv), loot: 0, hits: b.hits + mod(G, 'bossHits', lv) }; }
   const c = foeCourt(e), el = e.kind === 'elite' ? F.elite : null;
   const dl = dials(lv);
-  return { k: F.cards[c.rank] + (el ? (dl.eliteMore !== undefined ? dl.eliteMore : el.more) : 0), die: c.rank === 'A', start: dl.base + (e.keeper ? CONFIG.keeperBonus.base : 0) + mod(G, 'foeStart') + mod(G, 'foeStart', lv), blows: F.blows[c.rank] + (el ? el.blows : 0) + (dl.blows || 0) + (e.keeper ? CONFIG.keeperBonus.blows : 0) + mod(G, 'foeBlows') + lever(G, 'blows', 0), loot: (el ? el.loot : F.loot) * (F.loot ? lever(G, 'loot', F.loot) / F.loot : 1) };   // (ordinary enemies give F.loot cards, an elite its own; a card lever scales both, unless F.loot is 0)
+  return { k: F.cards[c.rank] + (el ? (dl.eliteMore !== undefined ? dl.eliteMore : el.more) : 0), die: c.rank === 'A', start: dl.base + (e.keeper ? CONFIG.keeperBonus.base : 0) + mod(G, 'foeStart') + mod(G, 'foeStart', lv) + foePrice(G, lv), blows: F.blows[c.rank] + (el ? el.blows : 0) + (dl.blows || 0) + (e.keeper ? CONFIG.keeperBonus.blows : 0) + mod(G, 'foeBlows') + lever(G, 'blows', 0), loot: (el ? el.loot : F.loot) * (F.loot ? lever(G, 'loot', F.loot) / F.loot : 1) };   // (ordinary enemies give F.loot cards, an elite its own; a card lever scales both, unless F.loot is 0)
 }
 // whether a kind of place is in play from this circle on (CONFIG.intro; the book's pages carry "elite: 1" on every circle, but it is laid only from the circle the table names): the screen's rules card reads it too
 function introduced(kind, level) { const need = (CONFIG.intro || {})[kind]; return !need || level >= need; }
 // what a lost run says back to the player: what dealt the last damage, where the Health went over the whole run, and one thing to try about the biggest source.
 // It reads the damage the engine already books by cause (stats.lost, stats.death), so the screen has no numbers of its own to drift; null when no damage ended the run (a run given up).
-const DEATH_FROM = { steps: 'the step clock', fights: 'fights', boss: 'the boss', gates: 'gates', terrain: 'the terrain', luck: 'a “?” card' };
+const DEATH_FROM = { steps: 'the step clock', chase: 'a chaser', fights: 'fights', boss: 'the boss', gates: 'gates', terrain: 'the terrain', luck: 'a “?” card' };
 const DEATH_TIP = {
   steps: 'Look at the exit before you walk, and count how many steps are left before you choose a long way round.',
   fights: 'Before you walk into an enemy, compare its starting number with your hand: you can pay Energy to let it pass (before it flips), or walk round it.',
@@ -2706,7 +2868,7 @@ function bossRules(depth, G) {
 }
 function foeName(e) { return e.kind === 'boss' ? e.name : e.kind === 'elite' ? 'the elite (' + cardsText(e.cards) + ')' : (e.n ? NUMS4[e.n - 1] + ' ' : '') + cardName(e.card); }
 function fightBase(G) { return G.strength + lever(G, 'fight', 0) + (G.floor.pledge ? G.floor.pledge.fight : 0) + (terrAt(G.floor, G.pos[0], G.pos[1]) === 'dark' ? CONFIG.fight.dark : 0); }
-function fightMine(G) { const f = G.fight; return f.base + f.played.reduce((a, c) => a + c.rank, 0); }
+function fightMine(G) { const f = G.fight, H = handsApply(G, 'you'); return f.base + (H ? handScore(H, f.played) : f.played.reduce((a, c) => a + c.rank, 0)); }   // (Hands: the cards you played, scored)
 // moving into an enemy: turn a hidden one's court card; then fight it or pay to let it pass (a known total: beat it with your cards at once, pay, or leave it)
 function meet(G, e) {
   if (!e || !e.alive) return;
@@ -2714,15 +2876,26 @@ function meet(G, e) {
   if (e.kind === 'foe' && !e.card) { e.card = drawCourt(G); log(G, 'You meet the hidden enemy: ' + cardName(e.card) + '.', 'fight'); }
   if (e.known) { askAgain(G, e, cardName(foeCourt(e)) + ' stands face up: its total is ' + e.known.total + '.', 'meet'); return; }
   const s = foeSpec(G, e);
-  ask(G, foeName(e) + ' blocks your way. It starts at ' + s.start + (s.die ? ' plus a die' : '') + ' and flips ' + s.k + ' blind card' + (s.k > 1 ? 's' : '') + '; a loss costs ' + s.blows + ' damage. You have ' + fightBase(G) + ' and ' + G.hand.length + ' hand card' + (G.hand.length === 1 ? '' : 's') + ' (' + handSum(G) + ' in all).' + (fightBase(G) + handSum(G) >= s.start + (s.die ? 6 : 0) + s.k * 10 ? ' Its most possible total is ' + (s.start + (s.die ? 6 : 0) + s.k * 10) + ': your hand covers it whatever it flips.' : '') + ' Fight it' + (canPass(G) ? ', or pay to let it pass?' : '?'), [{ label: 'Fight it', act: 'fight' }].concat(passOption(G) ? [passOption(G)] : []), 'foe', { at: G.floor.enemies.indexOf(e) });
+  ask(G, foeName(e) + ' blocks your way. It starts at ' + s.start + (s.die ? ' plus a die' : '') + ' and flips ' + s.k + ' blind card' + (s.k > 1 ? 's' : '') + '; a loss costs ' + s.blows + ' damage. You have ' + fightBase(G) + ' and ' + G.hand.length + ' hand card' + (G.hand.length === 1 ? '' : 's') + ' (' + handSum(G) + ' in all).' + (!handsApply(G, 'foe') && fightBase(G) + handSum(G) >= s.start + (s.die ? 6 : 0) + s.k * 10 ? ' Its most possible total is ' + (s.start + (s.die ? 6 : 0) + s.k * 10) + ': your hand covers it whatever it flips.' : '') + ' Fight it' + (canPass(G) ? ', or pay to let it pass?' : '?'), [{ label: 'Fight it', act: 'fight' }].concat(passOption(G) ? [passOption(G)] : []), 'foe', { at: G.floor.enemies.indexOf(e) });
 }
 function fightSteps(G) { return (CONFIG.fight.steps || 0) + (CONFIG.fight.paradiseSteps && G.floor && realmOf(G.floor.level) === 'paradise' ? CONFIG.fight.paradiseSteps : 0); }
+// the lab's chaser switch (CONFIG.steps.chaser): the clock catches up with you. A court card turns up beside you: fight it where you stand, let it pass, or stop (its blow). It never follows you after, and it costs no steps.
+function chase(G) {
+  const CH = CONFIG.steps.chaser, fl = G.floor; if (!CH || !fl || G.over) return;
+  let card = drawCourt(G); if (CH.pool === 'low') for (let i = 0; i < 40 && card && (card.rank === 'K'); i++) { G.piles.court.unshift(card); card = drawCourt(G); }   // (a rejected card goes back under the pile)
+  if (!card) return;
+  const e = { id: 1000 + fl.enemies.length, kind: 'foe', n: 0, x: G.pos[0], y: G.pos[1], card, cards: null, alive: true, known: null, from: 'chase', chaser: true, hidden: false };
+  fl.enemies.push(e); const at = fl.enemies.length - 1; G.stats.chase = G.stats.chase || { n: 0, won: 0, passed: 0, lost: 0 }; G.stats.chase.n++;
+  const s = foeSpec(G, e);
+  ask(G, 'Time catches up with you: ' + foeName(e) + ' is on your heels. It starts at ' + s.start + (s.die ? ' plus a die' : '') + ' and flips ' + s.k + ' blind card' + (s.k > 1 ? 's' : '') + '; a loss costs ' + s.blows + ' damage. You have ' + fightBase(G) + ' and ' + G.hand.length + ' hand card' + (G.hand.length === 1 ? '' : 's') + ' (' + handSum(G) + ' in all). Fight it' + (canPass(G) ? ', or pay to let it pass?' : '?'), [{ label: 'Fight it', act: 'fight' }].concat(passOption(G) ? [passOption(G)] : []), 'foe', { at, chase: true });
+}
 function fightStart(G, e) {
   const s = foeSpec(G, e); G.fights++;
-  if (fightSteps(G)) { spend(G, fightSteps(G), 'The fight'); if (G.over) return; }   // (a skull from the fight's own steps can end the run before the first card)
+  if (fightSteps(G) && !e.chaser) { spend(G, fightSteps(G), 'The fight'); if (G.over) return; }   // (a skull from the fight's own steps can end the run before the first card)
   G.fight = { at: G.floor.enemies.indexOf(e), boss: false, its: s.start, k: s.k, turned: [], die: null, base: fightBase(G), played: [], blows: s.blows, loot: s.loot, swung: false };
   let msg = 'You fight ' + foeName(e) + ': it starts at ' + s.start;
   if (s.die) { const d = G.rng.d6(); G.fight.die = d; G.fight.its += d; msg += ', and rolls ' + d + ' (' + G.fight.its + ')'; }
+  G.fight.its0 = G.fight.its;   // (its fixed part: the start and the die; the flipped cards are scored on top, see foeIts)
   log(G, msg + '. You have ' + G.fight.base + '.', 'fight');
   fightStep(G);
 }
@@ -2731,28 +2904,48 @@ function fightStep(G) {
   for (;;) {
     const mine = fightMine(G);
     if (mine < f.its && !(f.boss && f.turned.length < f.k)) { askAdd(G, e, f.its - mine); return; }   // a boss turns his card before you commit anything
-    if (f.turned.length < f.k) { const c = draw(G, 'numbers'); if (!c) { f.k = f.turned.length; continue; } f.turned.push(c); f.its += c.rank; log(G, (e.kind === 'boss' ? e.name : 'It') + ' flips ' + cardName(c) + ': ' + f.its + (f.turned.length < f.k ? ' (' + (f.k - f.turned.length) + ' more to come)' : '') + '.', 'fight'); continue; }
+    if (f.turned.length < f.k) { const c = draw(G, 'numbers'); if (!c) { f.k = f.turned.length; continue; } f.turned.push(c); f.its += c.rank; if (handsApply(G, 'foe')) f.its = foeIts(G, f); log(G, (e.kind === 'boss' ? e.name : 'It') + ' flips ' + cardName(c) + ': ' + f.its + handNote(handsApply(G, 'foe'), f.turned) + (f.turned.length < f.k ? ' (' + (f.k - f.turned.length) + ' more to come)' : '') + '.', 'fight'); continue; }
     if (f.boss) bossHit(G, e); else fightWon(G, e);
     return;
   }
 }
 function askAdd(G, e, gap) {
   const f = G.fight, swungOnly = f.boss && f.swung && CONFIG.fight.swingOnly;   // a blind swing is the whole attack: after it you add nothing, and short of him it is a miss (Step P5, the veteran's E1)
-  const opts = swungOnly ? [] : covers(G.hand, gap).map(cs => ({ label: 'Add ' + cardsText(cs) + ' (+' + cs.reduce((a, c) => a + c.rank, 0) + ')', act: 'add', cards: cs }));
+  const Hy = handsApply(G, 'you'), have = Hy ? handScore(Hy, f.played) : 0;
+  const opts = swungOnly ? [] : covers(G.hand, gap, Hy ? { H: Hy, played: f.played } : undefined).map(cs => ({ label: 'Add ' + cardsText(cs) + ' (+' + (Hy ? handScore(Hy, f.played.concat(cs)) - have + handNote(Hy, f.played.concat(cs)) : cs.reduce((a, c) => a + c.rank, 0)) + ')', act: 'add', cards: cs }));
   if (f.boss && !f.played.length && CONFIG.fight.swing === 'boss') opts.push({ label: 'Swing blind: the top number card counts for you (and nothing else: short of him you lose the round)', act: 'swing' });
   if (f.boss && !f.paid && !swungOnly) { const b = bossAt(G.floor.level); if (b.turn && G.energy >= b.turn) opts.push({ label: 'Pay ' + b.turn + ' Energy: flip the top number card, it counts for you', act: 'energyTurn' }); }
   if (!f.boss && CONFIG.fight.buy && G.energy >= CONFIG.fight.buy.price && (f.bought || 0) < CONFIG.fight.buy.max) opts.push({ label: 'Buy a card: pay ' + CONFIG.fight.buy.price + ' Energy, draw the top number card into your hand', act: 'buy' });   // (the study's switch: off unless CONFIG.fight.buy)
+  if (!f.boss && Hy && Hy.swap && G.energy >= Hy.swap.price && (f.swapped || 0) < Hy.swap.max && G.hand.length) opts.push({ label: 'Swap a card: pay ' + Hy.swap.price + ' Energy, drop a hand card of your choice, draw the top number card', act: 'swap' });
   opts.push({ label: f.boss ? 'Stop: round lost (' + f.blows + ' damage)' : 'Stop: you lose (' + f.blows + ' damage)', act: 'stop' });
   if (opts.length === 1) G.forcedLoss = G.forcedLoss || f.boss;
   ask(G, (e.kind === 'boss' ? e.name : 'It') + ' has ' + f.its + ', you have ' + fightMine(G) + ': ' + gap + ' short' + (f.turned.length < f.k ? ', with ' + (f.k - f.turned.length) + ' card' + (f.k - f.turned.length > 1 ? 's' : '') + ' still to come' : '') + (swungOnly ? '. The blind swing was the whole round: it is lost.' : '. Add hand cards, or stop?'), opts, 'add', { at: f.at, gap });
 }
+function winEnd(G, e) {   // what follows a win once its cards are dealt with: the hand drawn back up, the step onto its square, the keeper's fall
+  if (CONFIG.fight.winRefill) refill(G, 'A win fills your hand: you draw back up to ' + handMax(G));   // the cards you played come back: a win is growth
+  onto(G, e);
+  if (e.keeper) G.queue.unshift({ op: 'fall' });
+  afterFight(G);
+}
+function askLoot(G, q) {   // Hands: take one of the cards it flipped
+  ask(G, 'Its cards: ' + cardsText(q.pool) + '. Take ' + (q.left > 1 ? 'one of them (you may take ' + q.left + ')' : 'one into your hand') + '?', q.pool.map(c => ({ label: 'Take ' + cardName(c), act: 'loot', card: { rank: c.rank, suit: c.suit } })).concat([{ label: 'Take none', act: 'lootNone' }]), 'loot', { at: q.at, pool: q.pool, left: q.left });
+}
 function fightWon(G, e) {
   const f = G.fight; G.fight = null;
+  { const Hy = handsApply(G, 'you'), Hf = handsApply(G, 'foe'); if (Hy) handStat(G, 'you', handMatch(Hy, f.played)); if (Hf) handStat(G, 'foe', handMatch(Hf, f.turned)); }   // (the lab's record of which matches land)
   for (const c of f.played) discard(G, c);
+  const Hl = handsApply(G, 'you'), pick = Hl ? Math.max(Math.round(f.loot), Hl.loot || 0) : 0;
+  if (Hl && pick > 0 && f.turned.length) {   // Hands: you choose which of its flipped cards you take; the rest of the win waits for the answer (winEnd)
+    e.alive = false; if (e.chaser) { if (G.stats.chase) G.stats.chase.won++; } else { G.wins++; G.stats.beaten++; }
+    if (e.card) discard(G, e.card); if (e.cards) e.cards.forEach(c => discard(G, c));
+    log(G, 'You beat ' + foeName(e) + '.', 'good');
+    const at = G.floor.enemies.indexOf(e); G.queue.unshift({ op: 'loot', at, pool: f.turned.slice(), left: Math.min(pick, f.turned.length) }, { op: 'winEnd', at });
+    return;
+  }
   const sorted = f.turned.slice().sort((a, b) => b.rank - a.rank), n = Math.round(f.loot), got = sorted.slice(0, n);
   while (got.length < n) { const c = draw(G, 'numbers'); if (!c) break; got.push(c); }
   for (const c of sorted.slice(n)) discard(G, c);
-  e.alive = false; G.wins++; G.stats.beaten++;
+  e.alive = false; if (e.chaser) { if (G.stats.chase) G.stats.chase.won++; } else { G.wins++; G.stats.beaten++; }
   if (e.card) discard(G, e.card); if (e.cards) e.cards.forEach(c => discard(G, c));
   const dropped = got.map(c => takeCard(G, c)).filter(Boolean); G.stats.cardsWon += got.length;
   log(G, 'You beat ' + foeName(e) + (got.length ? ' and take ' + cardsText(got) + ' into your hand' : '') + (dropped.length ? ' (your lowest, ' + cardsText(dropped) + ', goes to the discards)' : '') + '.', 'good');
@@ -2769,7 +2962,12 @@ function fightLost(G) {
     for (const c of f.turned) discard(G, c);
     log(G, 'Round lost against ' + e.name + ': ' + f.blows + ' damage.', 'bad'); hurt(G, f.blows, 'boss'); afterFight(G); dead(G); return;
   }
+  if (e.chaser) {   // a chaser falls back after a loss: it is not an enemy you meet again
+    if (G.stats.chase) G.stats.chase.lost++; e.alive = false; if (e.card) discard(G, e.card); for (const c of f.turned) discard(G, c);
+    log(G, 'You stop. You lose: ' + f.blows + ' damage, and it falls back.', 'bad'); hurt(G, f.blows, 'chase'); afterFight(G); dead(G); return;
+  }
   while (f.turned.length < f.k) { const c = draw(G, 'numbers'); if (!c) break; f.turned.push(c); f.its += c.rank; }   // its other cards are turned: its total is now known
+  if (handsApply(G, 'foe')) { f.its = foeIts(G, f); handStat(G, 'foe', handMatch(handsApply(G, 'foe'), f.turned)); }
   e.known = { total: f.its, cards: f.turned };
   log(G, 'You stop. It flips the rest: ' + cardsText(f.turned) + (f.die ? ' and ' + f.die + ' on its die' : '') + ', total ' + f.its + '. You lose: ' + f.blows + ' damage.', 'bad');
   hurt(G, f.blows, 'fights'); afterFight(G);
@@ -2779,7 +2977,7 @@ function fightLost(G) {
 // after a loss (or meeting a known enemy again): its total is known, so beat it with your cards at once, pay, or leave it and walk round
 function askAgain(G, e, why, after) {
   const T = e.known.total, base = fightBase(G);
-  const opts = covers(G.hand, T - base).map(cs => ({ label: cs.length ? 'Fight again: play ' + cardsText(cs) + ' (' + (base + cs.reduce((a, c) => a + c.rank, 0)) + ' against ' + T + ')' : 'Fight again: your ' + base + ' is enough', act: 'cover', cards: cs }));
+  const Hy = handsApply(G, 'you'), opts = covers(G.hand, T - base, Hy ? { H: Hy, played: [] } : undefined).map(cs => ({ label: cs.length ? 'Fight again: play ' + cardsText(cs) + ' (' + (base + (Hy ? handScore(Hy, cs) : cs.reduce((a, c) => a + c.rank, 0))) + (Hy ? handNote(Hy, cs) : '') + ' against ' + T + ')' : 'Fight again: your ' + base + ' is enough', act: 'cover', cards: cs }));
   if (canPass(G)) opts.push(passOption(G));
   if (!opts.length && after === 'meet') { for (const c of e.known.cards) discard(G, c); e.known = null; G.stats.met--; meet(G, e); return; }   // nothing covers it and you cannot pay: it shakes its cards and you fight it from scratch (an enemy never blocks the way for good)
   if (after !== 'meet') opts.push({ label: 'Leave it', act: 'leave' });   // right after a loss you may walk round it; move into it again and you deal with it
@@ -2787,7 +2985,7 @@ function askAgain(G, e, why, after) {
 }
 function coverKnown(G, e, cards) {
   const cs = playCards(G, cards); G.fights++;
-  G.fight = { at: G.floor.enemies.indexOf(e), boss: false, its: e.known.total, k: e.known.cards.length, turned: e.known.cards.slice(), die: null, base: fightBase(G), played: cs, blows: foeSpec(G, e).blows, loot: foeSpec(G, e).loot, swung: false };
+  G.fight = { at: G.floor.enemies.indexOf(e), boss: false, its: e.known.total, its0: e.known.total, k: e.known.cards.length, turned: e.known.cards.slice(), die: null, base: fightBase(G), played: cs, blows: foeSpec(G, e).blows, loot: foeSpec(G, e).loot, swung: false };
   e.known = null;
   log(G, 'You fight again' + (cs.length ? ', with ' + cardsText(cs) : '') + ': ' + fightMine(G) + ' against ' + G.fight.its + '.', 'fight');
   fightWon(G, e);
@@ -2796,14 +2994,14 @@ function coverKnown(G, e, cards) {
 function canPass(G) { return G.energy >= passCost(G); }
 function passOption(G) { return canPass(G) ? { label: 'Let it pass (' + passCost(G) + ' Energy)', act: 'pass' } : null; }
 function passFoe(G, e) {
-  const pc = passCost(G); if (G.energy < pc) return; spendE(G, pc); G.stats.paid++;
+  const pc = passCost(G); if (G.energy < pc) return; spendE(G, pc); if (e.chaser && G.stats.chase) G.stats.chase.passed++; else G.stats.paid++;
   log(G, 'You let ' + foeName(e) + ' pass: −' + pc + ' Energy.', 'event');
   e.alive = false; if (e.card) discard(G, e.card); if (e.cards) e.cards.forEach(c => discard(G, c)); if (e.known) { for (const c of e.known.cards) discard(G, c); e.known = null; }
   onto(G, e);
   if (e.keeper) G.queue.unshift({ op: 'fall' });
 }
 // a beaten (or paid) enemy leaves its square free, and you step onto it (it joins your trail)
-function onto(G, e) { const fl = G.floor; G.pos = [e.x, e.y]; const k = key(e.x, e.y); if (!fl.trail.has(k)) { fl.trail.add(k); fl.trailPath.push([e.x, e.y]); } }
+function onto(G, e) { if (e.chaser) return; const fl = G.floor; G.pos = [e.x, e.y]; const k = key(e.x, e.y); if (!fl.trail.has(k)) { fl.trail.add(k); fl.trailPath.push([e.x, e.y]); } }
 // the Gambler's lever: draw back up after every fight instead of each page
 function afterFight(G) { if (lever(G, 'refill', 'page') === 'fight' && !G.over) refill(G, 'After the fight you draw back up to ' + handMax(G)); }
 // a boss: each attack he turns one card (Lucifer adds 2); add hit cards to be level, or stop: a miss. Every level attack is a hit.
@@ -2811,7 +3009,7 @@ function bossAttack(G, e) {
   if (!e || !e.alive) return;
   const s = foeSpec(G, e), fl = G.floor; G.fights++; fl.clockStopped = true;
   if (fl.level === 29 && examAsks(G)) { examine(G, e, s); return; }   // (no asks for this run's mode, or CONFIG.exam null: his rounds as before)
-  G.fight = { at: fl.enemies.indexOf(e), boss: true, its: s.start, k: s.k, turned: [], die: null, base: fightBase(G), played: [], blows: s.blows, loot: 0, swung: false };
+  G.fight = { at: fl.enemies.indexOf(e), boss: true, its: s.start, its0: s.start, k: s.k, turned: [], die: null, base: fightBase(G), played: [], blows: s.blows, loot: 0, swung: false };
   log(G, 'You face ' + e.name + ' (' + (G.bossWins[bossKey(fl.page)] || 0) + ' of ' + s.hits + ' rounds won so far)' + (s.start ? ': he starts at ' + s.start : '') + '. You have ' + G.fight.base + '.', 'fight');
   fightStep(G);
 }
@@ -3033,7 +3231,7 @@ function pageStates(k) { return [{ name: '', apply: () => {} }]; }
 root.Commedia = { CONFIG, Rng, makeRng, HS, PW, PH, DIRS, DK, OPP, key, CORNERS, CIRCLES, TERRAIN_NAMES, WIND, AREA, SUITS, COURT, STRONG,
   pageMap, circleKey, circlePage, landingCorner, book, setups, laidSetups, laidReach, latticeOf, terrainLine, doorTag, packSheet, unpackSheet, drawMazeSheet, DOOR_FAIL, doorStats, doorZone, D_CORNERS, D_STAR, flowOrient, flowOuts, flowReach, tPoint, tVec,
   drawCourt, newGame, enterPage, layAll, roll, options, choose, allowance, spend, stepsLeft, dials, altarCost, restHeal, answer, canAct, cloneGame, step, stepT, cell, solid, enemyAt, occupies, holeOpen, markAt, roomAt, rewardAt, gateAt, itemAt, terrAt, crossed, forward,
-  bossAt, bossFor, bossKey, underBoss, tier, foeSpec, fightSteps, examAsks, examAdvice, examPreview, examPrepare, examRules, examWords, foeCourt, foeName, fightBase, fightMine, covers, handMax, handSum, numberOdds, pileInfo, pileText, cardName, cardsText, newPiles, draw,
+  bossAt, bossFor, bossKey, underBoss, tier, foeSpec, fightSteps, examAsks, examAdvice, examPreview, examPrepare, examRules, examWords, foeCourt, foeName, fightBase, fightMine, covers, keepersSettings, keepersRules, handsSettings, handsApply, handMatch, handScore, handName, handNote, handsRules, leastUseful, foeIts, handMax, handSum, numberOdds, pileInfo, pileText, cardName, cardsText, newPiles, draw,
   passCost, passOption, gateCards, gatePays, tollPrice, lever, buildOf, give, gives, pageStates, setupText,
   ledgerNew, ledgerClean, ledgerBuilds, ledgerEntries, gateRecord, ledgerRun, ledgerAfter, earnedText, offerRoll, offerChoices, offerText, applyOffer, mod,
   // Step P5: chapters, levels, tiles, gifts, doors
@@ -3125,36 +3323,59 @@ function bossExchange(G, pol) {
 // state: the cards still in hand (a bit mask), d = your total minus its total, the cards it has still to turn, its highest card so far.
 // Behind (d < 0): add a least set of cards that brings you level, or stop. Level with cards to come: it turns one (by the odds of the
 // number pile, as a counting player sees them). Level after its last card: a win, and its highest card joins your hand.
+// Hands: the average uplift an enemy that flips k cards gets, E[score] / E[sum] over the whole number deck (exact up to 5 cards). The bot's models are sums, so they see the enemy's combos as this average, not as spikes.
+const LAMBDA = new Map();
+function foeLambda(H, k) {
+  if (k < 2) return 1; k = Math.min(k, 5);
+  const key = JSON.stringify([H.mode, H.number, H.suit, H.run, H.colour, H.parity, k]); if (LAMBDA.has(key)) return LAMBDA.get(key);
+  const deck = []; for (const su of 'HDSC') for (let r = 2; r <= 10; r++) deck.push({ rank: r, suit: su });
+  let sum = 0, score = 0; const cur = [];
+  (function rec(st) { if (cur.length === k) { sum += cur.reduce((a, c) => a + c.rank, 0); score += D.handScore(H, cur); return; } for (let i = st; i < deck.length; i++) { cur.push(deck[i]); rec(i + 1); cur.pop(); } })(0);
+  const v = score / sum; LAMBDA.set(key, v); return v;
+}
 function fightModel(G, pol, spec, extra) {
   const hand = G.hand.map(c => c.rank), n = hand.length, cp = hand.map(r => cardPoints(G, pol, r)), pd = pol.uniform ? UNIFORM : D.numberOdds(G), max = D.handMax(G);
+  const Hy = D.handsApply(G, 'you'), Hf = D.handsApply(G, 'foe'), playedBase = Hy && extra && extra.played ? extra.played : [], lam = Hf ? foeLambda(Hf, spec.k) : 1, lr = r => lam === 1 ? r : Math.round(r * lam);   // (Hands: the cards already played, the enemy's average uplift)
+  const vpp = Hy ? Math.max(0.05, (cardPoints(G, pol, 10) - cardPoints(G, pol, 2)) / 8) : 0, bonusMemo = new Map();   // (what a rank point is worth, for a match kept in hand)
+  const bonusOf = m => { if (!Hy) return 0; let b = bonusMemo.get(m); if (b === undefined) { const cs = []; for (let i = 0; i < n; i++) if (m >> i & 1) cs.push(G.hand[i]); b = D.handMatch(Hy, cs).extra * vpp; bonusMemo.set(m, b); } return b; };
   const lossV = -blowCost(G, pol, spec.blows) + Math.max(passValue(G, pol), -(pol.leaveCost !== undefined ? pol.leaveCost : 6)) - (extra && extra.lossExtra || 0);
-  const handV = m => { let v = 0; for (let i = 0; i < n; i++) if (m >> i & 1) v += cp[i]; return v; };
+  const handV = m => { let v = 0; for (let i = 0; i < n; i++) if (m >> i & 1) v += cp[i]; return v + bonusOf(m); };
   const low = m => { let lo = -1; for (let i = 0; i < n; i++) if (m >> i & 1 && (lo < 0 || hand[i] < hand[lo])) lo = i; return lo; };
   const avgCp = avgCardPoints(G, pol, pd);   // a win draws your hand back up to its size: the cards you played come back as average draws
   const lootV = (m, mx) => {   // after a win: its highest card(s) first, then the draw back up to the hand size
     let v = 0, cnt = 0; for (let i = 0; i < n; i++) if (m >> i & 1) cnt++;
     const take = r => { const p = cardPoints(G, pol, r); if (cnt < max) { cnt++; return p; } const lo = low(m); return lo < 0 ? p : Math.max(0, p - cp[lo]); };
-    if (spec.loot && mx) { v += take(mx); if (spec.loot > 1) v += take(Math.max(2, mx - 2)); }
+    const lootN = Hy ? Math.max(spec.loot || 0, Hy.loot || 0) : spec.loot;   // (Hands: a win lets you pick one of its cards)
+    if (lootN && mx) { v += take(mx); if (lootN > 1) v += take(Math.max(2, mx - 2)); }
     if (D.CONFIG.fight.winRefill) v += Math.max(0, max - cnt) * avgCp;
     return v;
   };
   const coversOf = new Map();
-  const covs = (m, gap) => {   // least sets inside m reaching gap (by value)
+  const covsPlain = (m, gap) => {   // least sets inside m reaching gap (by value)
     const k = m * 64 + gap; if (coversOf.has(k)) return coversOf.get(k);
     const out = [], seen = new Set();
     for (let s = m; s; s = (s - 1) & m) { let sum = 0, lo = 99; for (let i = 0; i < n; i++) if (s >> i & 1) { sum += hand[i]; if (hand[i] < lo) lo = hand[i]; } if (sum < gap || sum - lo >= gap) continue; const sig = []; for (let i = 0; i < n; i++) if (s >> i & 1) sig.push(hand[i]); const g = sig.sort((a, b) => a - b).join(); if (seen.has(g)) continue; seen.add(g); out.push([s, sum]); }
     coversOf.set(k, out); return out;
   };
+  const scoreMemo = new Map(), mineAt = m => { let v = scoreMemo.get(m); if (v === undefined) { const cs = playedBase.slice(); for (let i = 0; i < n; i++) if (!(m >> i & 1)) cs.push(G.hand[i]); v = D.handScore(Hy, cs); scoreMemo.set(m, v); } return v; };   // Hands: the score of what is played once the cards outside mask m are
+  const coversH = new Map();
+  const covsHands = (m, gap) => {   // Hands: least sets inside m whose score reaches gap, no card of which can be left out
+    const k = m * 64 + gap; if (coversH.has(k)) return coversH.get(k);
+    const out = [], here = mineAt(m);
+    for (let s = m; s; s = (s - 1) & m) { const g = mineAt(m & ~s) - here; if (g < gap) continue; let least = true; for (let i = 0; i < n && least; i++) if (s >> i & 1) { const s2 = s & ~(1 << i); if (s2 && mineAt(m & ~s2) - here >= gap) least = false; } if (least) out.push([s, g]); }
+    coversH.set(k, out); return out;
+  };
+  const covs = Hy ? covsHands : covsPlain;
   const memo = new Map();
   function V(m, d, left, mx) {
     const k = ((m * 128 + (d + 64)) * 8 + left) * 16 + mx; const hit = memo.get(k); if (hit !== undefined) return hit;
     let v;
     if (d < 0) { v = handV(m) + lossV; for (const [s, sum] of covs(m, -d)) { const w = V(m & ~s, d + sum, left, mx); if (w > v) v = w; } }
     else if (left <= 0) v = handV(m) + lootV(m, mx);
-    else { v = 0; for (let r = 2; r <= 10; r++) if (pd[r]) v += pd[r] * V(m, Math.max(-63, d - r), left - 1, Math.max(mx, r)); }
+    else { v = 0; for (let r = 2; r <= 10; r++) if (pd[r]) v += pd[r] * V(m, Math.max(-63, d - lr(r)), left - 1, Math.max(mx, r)); }
     memo.set(k, v); return v;
   }
-  return { V, handV, full: (1 << n) - 1, hand, covs, lossV };
+  return { V, handV, full: (1 << n) - 1, hand, covs, lossV, mineAt: Hy ? mineAt : null };
 }
 function popc(x) { let c = 0; while (x) { c += x & 1; x >>= 1; } return c; }
 function avgCardPoints(G, pol, pd) { let v = 0; for (let r = 2; r <= 10; r++) if (pd[r]) v += pd[r] * cardPoints(G, pol, r); return v; }
@@ -3198,28 +3419,40 @@ function buyChoice(G, pol) {
   if (G.energy - B.price < (pol.naiveFight ? 0 : (pol.keepE !== undefined ? pol.keepE : 4))) return -1;
   return i;
 }
+// Hands: swap a card (pay Energy, drop the one that scores least, draw) when nothing covers the gap and the cards still to come could
+function swapChoice(G, pol) {
+  const p = G.pending, i = p.options.findIndex(o => o.act === 'swap'); if (i < 0 || pol.naiveFight) return -1;
+  const H = D.handsApply(G, 'you'), f = G.fight; if (G.energy - H.swap.price < (pol.keepE !== undefined ? pol.keepE : 4)) return -1;
+  const gap = f.its - D.fightMine(G), rest = G.hand.slice(); rest.splice(D.leastUseful(H, G.hand), 1);
+  const potential = D.handScore(H, f.played.concat(rest)) - D.handScore(H, f.played) + avgCard(G);
+  return potential >= gap ? i : -1;
+}
 // a live fight, at the "add or stop" question: the value of each option
 function addChoice(G, pol) {
   const f = G.fight, p = G.pending, e = G.floor.enemies[f.at];
   if (f.boss) return bossAddChoice(G, pol, e);
   if (pol.naiveFight) { for (let i = 0; i < p.options.length; i++) if (p.options[i].act === 'add') return i; const b = buyChoice(G, pol); return b >= 0 ? b : p.options.length - 1; }   // the smallest cover first; buy a card if that can cover; stop only when nothing does
-  const spec = { blows: f.blows, loot: f.loot }, M = fightModel(G, pol, spec), mine = D.fightMine(G), d = mine - f.its, left = f.k - f.turned.length, mx = Math.max(0, ...f.turned.map(c => c.rank));
+  const spec = { blows: f.blows, loot: f.loot, k: f.k }, M = fightModel(G, pol, spec, { played: f.played }), mine = D.fightMine(G), d = mine - f.its, left = f.k - f.turned.length, mx = Math.max(0, ...f.turned.map(c => c.rank));
   let best = p.options.length - 1, bv = M.handV(M.full) + M.lossV;
   p.options.forEach((o, i) => {
     if (o.act !== 'add') return;
     let m = M.full, sum = 0; for (const c of o.cards) { const j = G.hand.findIndex((h, jj) => h.rank === c.rank && h.suit === c.suit && (m >> jj & 1)); if (j >= 0) { m &= ~(1 << j); sum += c.rank; } }
-    const v = M.V(m, d + sum, left, mx) + (G.rng.next() - 0.5) * (pol.noise || 0) * 0.2; if (v > bv) { bv = v; best = i; }
+    const v = M.V(m, (M.mineAt ? d + M.mineAt(m) - M.mineAt(M.full) : d + sum), left, mx) + (G.rng.next() - 0.5) * (pol.noise || 0) * 0.2; if (v > bv) { bv = v; best = i; }
   });
-  if (best === p.options.length - 1) { const b = buyChoice(G, pol); if (b >= 0) return b; }
+  if (best === p.options.length - 1) { const sw = swapChoice(G, pol); if (sw >= 0) return sw; const b = buyChoice(G, pol); if (b >= 0) return b; }
   return best;
 }
 // ---------- a boss, solved exactly: attacks until he falls or you do. Each attack he turns one card (plus his number); a hit when you
 // are level, a miss costs his blows. With no hit cards in hand you may swing blind. The value counts the Health and cards you keep. ----------
 function bossModel(G, pol, e) {
   const spec = D.foeSpec(G, e), hand = G.hand.map(c => c.rank), n = hand.length, pd = pol.uniform ? UNIFORM : D.numberOdds(G), base = D.fightBase(G), turn = (D.bossAt(G.floor.level) || {}).turn || 0;
+  const Hy = D.handsApply(G, 'you'), Hf = D.handsApply(G, 'foe'), lam = Hf ? foeLambda(Hf, spec.k) : 1, lr = r => lam === 1 ? r : Math.round(r * lam);   // (Hands)
   const last = runEnd(G), hpEnd = chapterEnd(G) ? 0 : hpWeight(G, pol) * 0.8, cpEnd = hand.map(r => last ? 0 : (pol.cardA !== undefined ? pol.cardA : 0.6) * 5 + (pol.cardB !== undefined ? pol.cardB : 0.06) * 5 * r);
   const handV = m => { let v = 0; for (let i = 0; i < n; i++) if (m >> i & 1) v += cpEnd[i]; return v; };
-  const covs = (m, gap) => { const out = [], seen = new Set(); for (let s = m; s; s = (s - 1) & m) { let sum = 0, lo = 99; for (let i = 0; i < n; i++) if (s >> i & 1) { sum += hand[i]; if (hand[i] < lo) lo = hand[i]; } if (sum < gap || sum - lo >= gap) continue; const g = []; for (let i = 0; i < n; i++) if (s >> i & 1) g.push(hand[i]); const k = g.sort((a, b) => a - b).join(); if (seen.has(k)) continue; seen.add(k); out.push([s, sum]); } return out; };
+  const gMemo = new Map(), covMemo = new Map(), g = s => { let v = gMemo.get(s); if (v === undefined) { const cs = []; for (let i = 0; i < n; i++) if (s >> i & 1) cs.push(G.hand[i]); v = D.handScore(Hy, cs); gMemo.set(s, v); } return v; };
+  const covsHands = (m, gap) => { const key = m * 64 + gap; let out = covMemo.get(key); if (out) return out; out = []; for (let s = m; s; s = (s - 1) & m) { const sc = g(s); if (sc < gap) continue; let least = true; for (let i = 0; i < n && least; i++) if (s >> i & 1) { const s2 = s & ~(1 << i); if (s2 && g(s2) >= gap) least = false; } if (least) out.push([s, sc]); } covMemo.set(key, out); return out; };   // Hands: a boss attack is one add, scored on its own (remembered: a 7-card hand took 13 seconds a decision without)
+  const covsPlain = (m, gap) => { const out = [], seen = new Set(); for (let s = m; s; s = (s - 1) & m) { let sum = 0, lo = 99; for (let i = 0; i < n; i++) if (s >> i & 1) { sum += hand[i]; if (hand[i] < lo) lo = hand[i]; } if (sum < gap || sum - lo >= gap) continue; const g = []; for (let i = 0; i < n; i++) if (s >> i & 1) g.push(hand[i]); const k = g.sort((a, b) => a - b).join(); if (seen.has(k)) continue; seen.add(k); out.push([s, sum]); } return out; };
+  const covs = Hy ? covsHands : covsPlain;
   const memoW = new Map(), memoA = new Map(), gr = (D.bossAt(G.floor.level) || {}).grace || 0, full = (1 << n) - 1;
   const grace = (m, hits) => { if (!gr || hits <= 1) return m; for (let g = 0; g < gr; g++) { let lo = -1; for (let i = 0; i < n; i++) if (!(m >> i & 1) && (lo < 0 || hand[i] < hand[lo])) lo = i; if (lo < 0) break; m |= 1 << lo; } return m; };
   const W = (m, hits, hp, en) => {   // the value at the start of an attack (en: the Energy you still hold, used only where Energy turns a card)
@@ -3232,7 +3465,7 @@ function bossModel(G, pol, e) {
   const A = (m, d, left, mode, hits, hp, en, paid) => {   // inside an attack. mode: 0 nothing played yet, 1 cards committed (no blind swing now), 2 swung blind (the whole attack: short is a miss)
     const k = ((((((m * 128 + d + 64) * 4 + left) * 3 + mode) * 8 + hits) * 32 + hp) * 16 + en) * 2 + (paid ? 1 : 0); const h = memoA.get(k); if (h !== undefined) return h;
     let v;
-    if (left > 0) { v = 0; for (let r = 2; r <= 10; r++) if (pd[r]) v += pd[r] * A(m, Math.max(-63, d - r), left - 1, mode, hits, hp, en, paid); }   // he turns his cards first (bosses are telegraphed)
+    if (left > 0) { v = 0; for (let r = 2; r <= 10; r++) if (pd[r]) v += pd[r] * A(m, Math.max(-63, d - lr(r)), left - 1, mode, hits, hp, en, paid); }   // he turns his cards first (bosses are telegraphed)
     else if (d < 0) {
       v = W(m, hits, hp - spec.blows, en);   // stop: a miss
       if (mode !== 2 || !D.CONFIG.fight.swingOnly) {
@@ -3256,7 +3489,7 @@ function bossAddChoice(G, pol, e) {
     if (o.act === 'stop') v = M.W(M.full, hits, G.health - f.blows, G.energy);
     else if (o.act === 'energyTurn') { v = 0; const pd = pol.uniform ? UNIFORM : D.numberOdds(G); for (let r = 2; r <= 10; r++) if (pd[r]) v += pd[r] * M.A(M.full, Math.min(63, d + r), left, 1, hits, G.health, G.energy - M.turn, true); }
     else if (o.act === 'swing') { v = 0; const pd = pol.uniform ? UNIFORM : D.numberOdds(G); for (let r = 2; r <= 10; r++) if (pd[r]) v += pd[r] * M.A(M.full, Math.min(63, d + r), left, D.CONFIG.fight.swingOnly ? 2 : 1, hits, G.health, G.energy, !!f.paid); }
-    else { let m = M.full, sum = 0; for (const c of o.cards) { const j = G.hand.findIndex((h, jj) => h.rank === c.rank && h.suit === c.suit && (m >> jj & 1)); if (j >= 0) { m &= ~(1 << j); sum += c.rank; } } v = M.A(m, d + sum, left, 1, hits, G.health, G.energy, !!f.paid); }
+    else { let m = M.full, sum = 0; for (const c of o.cards) { const j = G.hand.findIndex((h, jj) => h.rank === c.rank && h.suit === c.suit && (m >> jj & 1)); if (j >= 0) { m &= ~(1 << j); sum += c.rank; } } const Hb = D.handsApply(G, 'you'); if (Hb) sum = D.handScore(Hb, f.played.concat(o.cards)) - D.handScore(Hb, f.played); v = M.A(m, d + sum, left, 1, hits, G.health, G.energy, !!f.paid); }
     if (v > bv) { bv = v; best = i; }
   });
   return best;
@@ -3458,6 +3691,23 @@ function pickPledge(G, pol, opts) {
   if (pol.naive || pol.naiveFight) return Math.max(0, plain);
   const vs = pledgeValues(G, pol); let best = 0; opts.forEach((o, j) => { if (vs[o.i] > vs[opts[best].i] + 1e-9) best = j; }); return best;
 }
+// Hands: which of its flipped cards to take (the one that adds most to the hand, if that beats the draw it replaces), and which card goes (the one that scores least)
+function lootChoice(G, pol) {
+  const p = G.pending, H = D.handsApply(G, 'you'), cards = p.options.map((o, j) => ({ o, j })).filter(x => x.o.act === 'loot'), none = p.options.findIndex(o => o.act === 'lootNone');
+  if (!cards.length) return none >= 0 ? none : p.options.length - 1;
+  if (pol.naiveFight || !H) { let b = cards[0]; for (const x of cards) if (x.o.card.rank > b.o.card.rank) b = x; return b.j; }   // a first-timer takes the biggest
+  const base = D.handScore(H, G.hand), max = D.handMax(G); let bj = none, bv = -Infinity;
+  for (const x of cards) {
+    const after = G.hand.concat([x.o.card]), room = after.length <= max; if (!room) after.splice(D.leastUseful(H, after), 1);
+    const v = D.handScore(H, after) - base - (room ? avgCard(G) * 0.9 : 0.01) + x.o.card.rank * 0.001; if (v > bv) { bv = v; bj = x.j; }
+  }
+  return bv > 0 || none < 0 ? bj : none;
+}
+function dropChoice(G, pol) {
+  const p = G.pending, H = D.handsApply(G, 'you'), c = G.hand[H && !pol.naiveFight ? D.leastUseful(H, G.hand) : G.hand.length - 1];
+  const j = c ? p.options.findIndex(o => o.card && o.card.rank === c.rank && o.card.suit === c.suit) : -1;
+  return j >= 0 ? j : p.options.length - 1;
+}
 // the answer this player gives to the question on the table
 function pendingChoice(G, pol) {
   const p = G.pending, id = p.id, opts = p.options; let i = opts.length - 1;
@@ -3479,6 +3729,9 @@ function pendingChoice(G, pol) {
   else if (id === 'door') i = pickDoor(G, pol, opts);
   else if (id === 'pledge') i = pickPledge(G, pol, opts);
   else if (id === 'gift') i = pickGift(G, pol, opts);
+  else if (id === 'loot') i = lootChoice(G, pol);
+  else if (id === 'drop') i = dropChoice(G, pol);
+  else if (id === 'swapDrop') i = dropChoice(G, pol);
   return Math.max(0, Math.min(opts.length - 1, i));
 }
 // every move this player could make, scored (each score draws one noise value from the game's dice, in order); best = the one it picks
@@ -3753,21 +4006,21 @@ function renderStart(note) {
 function openStart(note, force) {
   stopBot(); { const lv = $('#leave'); if (lv) lv.hidden = true; }
   const open = D.ledgerBuilds(LEDGER).open, ways = D.ledgerEntries(LEDGER).open, heat = D.Heat && D.CONFIG.heat ? D.Heat.state(LEDGER).open : 0;
-  if (!force && !practising() && !LEDGER.offer && open.length < 2 && ways.length < 2 && !heat) { begin(note); return; }
+  if (!force && !practising() && !LEDGER.offer && open.length < 2 && ways.length < 2 && !heat && !handsFlag() && !keepersFlag()) { begin(note); return; }   // (a page address with #hands or #keepers always shows the start screen: that is where their boxes are)
   renderStart(note); ledgerDrawer(true); $('#start').hidden = false; $('#game').hidden = true; const g = $('#start-go'); if (g && !g.disabled) g.focus();
 }
 function begin(note) {
   if (!practising() && !LEDGER.runs && !note) note = 'Count your steps: each page allows the number in its “Steps allowed” chip. Past it, ' + skullRule() + '. Look at the exit before you walk.';   // the first run says the clock once, before the first move
-  const prac = practising(), build = buildId(); let run = null; $('#practice').checked = false;   // a practice run is chosen each time
+  const hands = !!($('#hands') && $('#hands').checked), keepers = !!($('#keepers') && $('#keepers').checked), prac = practising() || hands || keepers, build = buildId(); let run = null; $('#practice').checked = false; if ($('#hands')) $('#hands').checked = false; if ($('#keepers')) $('#keepers').checked = false;   // a practice run is chosen each time (Hands are always a practice run: nothing goes in the Ledger)
   const entry = prac || D.ledgerEntries(LEDGER).open.includes(pick.entry) ? pick.entry : 'normal';
   let heat = entry === 'normal' ? pick.heat.slice() : [];   // Heat: a Normal run's ticks (the screen only lets a legal set be ticked; the Ledger checks it again)
   if (!prac) { try { run = D.ledgerRun(LEDGER, build, entry === 'normal' ? pick.offer || null : null, entry, heat); } catch (e) { run = { build, offer: null }; if (heat.length) note = (note ? note + ' ' : '') + 'Heat was not taken: ' + e.message + '.'; heat = []; } }
   else if (heat.length) { const why = D.Heat.problem(heat, build); if (why) { note = (note ? note + ' ' : '') + 'Heat was not taken: ' + why + '.'; heat = []; } }
-  start(newSeed(), prac, run, build, entry, note, heat);
+  start(newSeed(), prac, run, build, entry, note, heat, hands ? (handsFrom() ? { from: handsFrom() } : true) : false, keepers);
   if (!howtoSeen()) openHowto();   // a player's first run opens How to play over it (the Rules button opens it again)
 }
-function start(seed, practice, run, build, entry, note, heat) {
-  stopBot(); const eng = { entry: entry || (run && run.entry) || 'normal' }; if (run && run.offer) eng.offer = run.offer; if (heat && heat.length) eng.heat = heat.slice();   // (the saved run carries its Heat, so a reload replays it)
+function start(seed, practice, run, build, entry, note, heat, hands, keepers) {
+  stopBot(); const eng = { entry: entry || (run && run.entry) || 'normal' }; if (run && run.offer) eng.offer = run.offer; if (heat && heat.length) eng.heat = heat.slice(); if (hands) eng.hands = hands; if (keepers) eng.keepers = true;   // (Exit keepers: a practice run too)   // (Hands: true, or { from: n } for #hands=n; a practice run, so a reload does not bring it back, like any practice run)   // (the saved run carries its Heat, so a reload replays it)
   G = D.newGame(seed, build || buildId(), eng); G.practice = !!practice; G.runSetup = run || null; G.recorded = false; G.choices = []; G.runRec = { seed, build: G.build, run: eng, setup: run || null };
   $('#start').hidden = true; $('#game').hidden = false; ledgerDrawer(false);
   hover = null; prev = null; $('#seed').value = seed; const nt = $('#notice'); if (nt) { nt.textContent = note || ''; nt.hidden = !note; }
@@ -3834,6 +4087,7 @@ function renderLedger() {
   box.appendChild(r);
 }
 function render() {
+  fillHandsCard(); fillKeepersCard();   // Hands and Exit keepers (experimental): the rules card carries them only for a run that plays them
   const lv = $('#leave'); if (lv) lv.hidden = true;
   if (G && !G.over && !G.pending && G.phase === 'idle') D.roll(G);   // no movement die: every turn starts by itself
   record(); selIdx = null;
@@ -3950,7 +4204,9 @@ function examAdviceText(G) {
 const fightCost = G => { const n = D.fightSteps(G); return n > 0 ? (D.realmOf(G.floor.level) === 'paradise' ? 'On a Paradise page every fight takes ' : 'Every fight takes ') + stepsText(n) + ' from the allowance.' : ''; };   // '' where a fight takes no steps
 const KEEP = 'guards the hole';   // the tag on the strip chip and the board label
 const guardsHole = e => !!e.keeper && (!!e.card || e.hidden !== undefined);   // tagged once the page has dealt it (face up, or face down in the dark): before a door is chosen the strip shows enemies not yet dealt, and a tag there would call a card face down that the rule deals face up
-const keeperNote = G => 'A keeper ' + KEEP + ': beat it or pay ' + D.passCost(G) + ' Energy to let it pass, and you drop. There is no way round, except a real dotted hole on the Fixed Stars, which drops you past it.';   // the tooltip
+const inferno = G => D.realmOf(G.floor.level) === 'inferno';   // (a keeper on an Inferno page is the Exit keepers switch; Paradise's is the rule of that chapter)
+const roundIt = G => inferno(G) ? (G.floor.level === 8 ? ', except a real dotted hole, which drops you past it' : '') : ', except a real dotted hole on the Fixed Stars, which drops you past it';   // the one way past a keeper
+const keeperNote = G => 'A keeper ' + KEEP + ': beat it or pay ' + D.passCost(G) + ' Energy to let it pass, and you drop. There is no way round' + roundIt(G) + '.';   // the tooltip
 const keeperTail = 'It guards the hole: beaten or paid, you drop through it.';                                                                              // the end of a hint or a prompt about it
 // the rules card's lines for what Paradise adds, from the engine's table (no run yet, so the plain price of letting an enemy pass); '' when the table has neither
 function paradiseRules() {
@@ -3964,7 +4220,7 @@ function heatRules() {
   const H = D.CONFIG.heat; if (!H || !D.Heat) return '';
   return 'After you first win chapter 1 the Ledger opens a strip of burdens, the first one open. Before a Normal run you may tick any open burdens, up to ' + H.cap + ' Heat in all. ' + (H.scope === 'inferno' ? 'A burden lasts through chapter 1 and is lifted at the chapter break; Hard and Brutal runs carry none.' : 'A burden lasts the whole run; Hard and Brutal runs carry none.') + ' ' + (H.unlock === 'highest' ? 'Win chapter 1 with every open burden ticked and the next one opens.' : 'Each win of chapter 1 opens the next one.') + ' The Ledger keeps the most Heat you have won with, character by character.';
 }
-const keeperNews = G => 'A keeper guards the hole of every door: one more enemy stands on it. Beat it or pay ' + D.passCost(G) + ' Energy to let it pass, and you drop. There is no way round, except a real dotted hole on the Fixed Stars, which drops you past it.' + (fightCost(G) ? ' ' + fightCost(G) : '');
+const keeperNews = G => (inferno(G) ? 'A keeper guards the exit of this page: one more enemy stands on the hole, face up.' : 'A keeper guards the hole of every door: one more enemy stands on it.') + ' Beat it or pay ' + D.passCost(G) + ' Energy to let it pass, and you drop. There is no way round' + roundIt(G) + '.' + (fightCost(G) ? ' ' + fightCost(G) : '');
 // the "new here" card for the exam: his rule for this run, and where the preparation is (the doors, his page)
 const examNews = G => D.examAsks(G) ? 'Saint Peter waits on the last sphere. ' + D.examRules(G) + ' To arrive with enough: ' + D.examPrepare(G) + '. The line \u201cSaint Peter asks\u201d under your Health and Energy keeps count.' : '';
 function renderFoes() {
@@ -4032,15 +4288,16 @@ function renderHand(sel) {
   const hand = $('#hand'); hand.innerHTML = '';
   const opts = G.pending ? G.pending.options : [], seqNow = G.pending ? G.pending.seq : undefined;
   const fighting = G.pending && (G.pending.id === 'add' || G.pending.id === 'again');
+  const Hy = D.handsApply(G, 'you'), hm = Hy ? D.handMatch(Hy, G.hand) : null, eqc = (a, b) => Hy ? same(a, b) : a.rank === b.rank;   // Hands: the match among your cards shows in gold; cards that share a number differ by suit
   if (!G.hand.length) { const s = document.createElement('span'); s.className = 'foe'; s.style.maxWidth = 'none'; s.textContent = 'no hand cards'; hand.appendChild(s); }
   for (const c of G.hand) {
     // in a fight, a hand card that is a complete answer by itself plays with one click; the buttons below list every way to be level
-    const o = fighting ? opts.find(q => q.cards && q.cards.length === 1 && q.cards[0].rank === c.rank) : null;
-    const b = pcard(c, (o ? 'btn' : '') + (sel && sel.some(x => same(x, c)) ? ' sel' : '') + (fighting && !o && !(sel && sel.some(x => same(x, c))) ? ' dim' : ''));
+    const o = fighting ? opts.find(q => q.cards && q.cards.length === 1 && eqc(q.cards[0], c)) : null;
+    const b = pcard(c, (o ? 'btn' : '') + (hm && hm.cards.some(x => same(x, c)) ? ' match' : '') + (sel && sel.some(x => same(x, c)) ? ' sel' : '') + (fighting && !o && !(sel && sel.some(x => same(x, c))) ? ' dim' : ''));
     if (o) { b.title = 'Play ' + D.cardName(o.cards[0]); b.addEventListener('click', () => answer(opts.indexOf(o), seqNow)); }
     hand.appendChild(b);
   }
-  $('#hand-n').textContent = G.hand.length + ' of ' + D.handMax(G) + ' · total ' + D.handSum(G);
+  $('#hand-n').textContent = G.hand.length + ' of ' + D.handMax(G) + ' · total ' + D.handSum(G) + (hm && hm.kind ? ' · ' + D.handName(hm) : '');
 }
 // ---------- "new here": the first time a kind of thing turns up, its one rule shows, one note at a time ----------
 const C_ = () => D.CONFIG;
@@ -4050,6 +4307,8 @@ const NEWS = {
   get smoke() { const E = Object.assign({}, C_().event, G && G.heatEvent || {}), st = E.steps, f = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v); const eq = [...new Set(st)].sort((a, b) => a - b).map(v => st.map((x, i) => x === v ? i + 1 : 0).filter(Boolean).join(' or ') + ': ' + (v ? f(v) + ' steps' : 'nothing')); return 'The smoke die: every page from circle ' + E.from + ' to ' + E.to + ' rolls one more die when it is set up. ' + eq.join(', ') + '. The header already counts it.'; },
   get foes() { const F = C_().fight; return 'Enemies: the numbered court cards are face up; the face-down one is flipped when you meet it. An enemy starts at ' + D.foeSpec(G, { kind: 'foe', card: { rank: 'J' } }).start + ' and flips blind number cards one at a time. Each time it is above you, add cards from your hand to be level, or stop: you lose the fight and take ' + F.blows.J + ' or ' + F.blows.K + ' damage. Level after its last card is a win: you draw your hand back up. Or pay ' + D.passCost(G) + ' Energy to slip past it (you walk on without a fight).' + (fightCost(G) ? ' ' + fightCost(G) : ''); },
   get fight() { return fightNews(); },   // the first fight: how it goes, with this enemy's numbers
+  get keepers() { return 'Exit keepers (experimental): ' + D.keepersRules(G.keepers); },
+  get hands() { const H = G.hands, you = H.sides !== 'foes', sw = you && H.swap ? ' In a fight you may swap a card: ' + H.swap.price + ' Energy, up to ' + H.swap.max + ' a fight.' : ''; return 'Hands (experimental): ' + D.handsRules(H).charAt(0).toUpperCase() + D.handsRules(H).slice(1) + '.' + (you ? ' Your best match shows in gold above your hand. After a win you pick which of its flipped cards to take; when your hand is full you choose the card that goes.' : ' An enemy that flips a match is stronger: its sum says so.') + sw; },
   elite: 'The elite: two court cards. It fights as the stronger: it flips one card more and hits 1 harder; beat it and take its two highest cards.',
   mark: 'A “?” mark: a walk stops on it and you flip a number card. Hearts heal, diamonds give Energy, spades cost damage, clubs cost Energy. 6 to 10 is the big version.',
   get gate() { return 'A gate: strength ' + C_().rooms.gateStrength + ' walks through; otherwise pay ' + C_().rooms.gateEnergy + ' Energy, or take ' + C_().rooms.gateBlows + ' damage. It never takes a card and never stops your walk.'; },
@@ -4086,8 +4345,10 @@ function renderNew() {
   if (G.lvl && G.lvl.kind === 'purgatory') have.add('lightening'); if (G.lvl && G.lvl.kind === 'paradise') have.add('doors');
   if (examNow(G)) have.add('exam');   // said once, on the first Paradise page (a card you have dismissed is in G.seen and does not come back on the next spheres)
   for (const e of fl.enemies) if (e.alive) { have.add(e.kind === 'boss' ? e.name.toLowerCase() : e.kind === 'elite' ? 'elite' : 'foes'); if (e.keeper) have.add('keeper'); }
+  if (D.handsApply(G, 'you') || D.handsApply(G, 'foe')) have.add('hands');   // Hands (experimental) are in play on this page
+  if (G.keepers) have.add('keepers');   // Exit keepers (experimental): said once, on the first page
   const fe = fightFoe(); if (fe && fe.kind !== 'boss' && !tipsSeen().fight) have.add('fight');   // a fight is in view: how it goes, once
-  const order = ['fight', 'trail', 'steps', 'smoke', 'lightening', 'doors', 'exam', 'foes', 'keeper', 'mark', 'fountain', 'chest', 'bait', 'light', 'rest', 'gate', 'toll', 'altar', 'elite', 'cerberus', 'lucifer', 'the wall of fire', 'saint peter'];
+  const order = ['fight', 'hands', 'keepers', 'trail', 'steps', 'smoke', 'lightening', 'doors', 'exam', 'foes', 'keeper', 'mark', 'fountain', 'chest', 'bait', 'light', 'rest', 'gate', 'toll', 'altar', 'elite', 'cerberus', 'lucifer', 'the wall of fire', 'saint peter'];
   const k = order.find(q => have.has(q) && NEWS[q] && !G.seen[q]);
   const box = $('#new'); box.innerHTML = '';
   if (!k || G.over) { box.hidden = true; return; }
@@ -4110,24 +4371,26 @@ const sgn = n => (n < 0 ? '−' : '+') + Math.abs(n);
 function fightFacts(G, p) {
   const fl = G.floor, f = G.fight, e = fl.enemies[f ? f.at : p.data.at], boss = e.kind === 'boss', s = D.foeSpec(G, e), base = f ? f.base : D.fightBase(G);
   const dark = D.terrAt(fl, G.pos[0], G.pos[1]) === 'dark' ? D.CONFIG.fight.dark : 0;
-  const F = { e, boss, spec: s, name: boss ? e.name : D.foeName(e), base, strength: G.strength, dark, bonus: base - G.strength - dark, blows: f ? f.blows : s.blows, pass: D.passCost(G), canPass: !!D.passOption(G), energy: G.energy, hand: D.handMax(G), hits: s.hits, wins: boss ? G.bossWins[D.bossKey(fl.page)] || 0 : 0 };
+  const F = { e, boss, spec: s, name: boss ? e.name : D.foeName(e), base, strength: G.strength, dark, bonus: base - G.strength - dark, blows: f ? f.blows : s.blows, pass: D.passCost(G), canPass: !!D.passOption(G), energy: G.energy, hand: D.handMax(G), hits: s.hits, wins: boss ? G.bossWins[D.bossKey(fl.page)] || 0 : 0, hy: D.handsApply(G, 'you'), hf: D.handsApply(G, 'foe') };   // (hy, hf: the Hands settings for each side on this page, or null)
   if (f) {   // a fight under way: what it has flipped so far, what you have played, how far short you are
-    F.stage = 'add'; F.k = f.k; F.turned = f.turned; F.left = f.k - f.turned.length; F.die = f.die || 0; F.its = f.its; F.start = f.its - rankSum(f.turned) - F.die; F.played = f.played; F.mine = D.fightMine(G);
+    F.stage = 'add'; F.k = f.k; F.turned = f.turned; F.left = f.k - f.turned.length; F.die = f.die || 0; F.its = f.its; F.start = (f.its0 !== undefined ? f.its0 : f.its - rankSum(f.turned)) - F.die; F.played = f.played; F.mine = D.fightMine(G);
   } else if (p.id === 'again' || (e.known && p.id !== 'foe')) {   // after a loss, or an enemy met again: its cards are face up and its total is known
     const T = e.known.total, cs = e.known.cards;
-    F.stage = 'again'; F.k = cs.length; F.turned = cs; F.left = 0; F.its = T; F.die = Math.max(0, T - rankSum(cs) - s.start); F.start = T - rankSum(cs) - F.die; F.played = []; F.mine = base;
+    F.stage = 'again'; F.k = cs.length; F.turned = cs; F.left = 0; F.its = T; { const sc = F.hf ? D.handScore(F.hf, cs) : rankSum(cs); F.die = Math.max(0, T - sc - s.start); F.start = T - sc - F.die; } F.played = []; F.mine = base;
   } else {   // the question before a fight: fight it or let it pass; nothing has flipped
     F.stage = 'meet'; F.k = s.k; F.turned = []; F.left = s.k; F.die = 0; F.its = s.start; F.start = s.start; F.played = []; F.mine = base;
   }
   F.short = F.its - F.mine;
-  const bo = (p.options || []).find(o => o.act === 'buy'); F.buy = bo ? { price: D.CONFIG.fight.buy.price, left: D.CONFIG.fight.buy.max - (f ? f.bought || 0 : 0) } : null;   // a card may be bought in this fight (CONFIG.fight.buy): its price and how many more
+  F.foeMatch = F.hf ? D.handMatch(F.hf, F.turned) : null; F.youMatch = F.hy ? D.handMatch(F.hy, F.played) : null;   // Hands: the best match among its flipped cards and among the cards you played
+  const bo = (p.options || []).find(o => o.act === 'buy'); F.buy = bo ? { price: D.CONFIG.fight.buy.price, left: D.CONFIG.fight.buy.max - (f ? f.bought || 0 : 0) } : null;
+  const so = (p.options || []).find(o => o.act === 'swap'); F.swap = so && F.hy && F.hy.swap ? { price: F.hy.swap.price, left: F.hy.swap.max - (f ? f.swapped || 0 : 0) } : null;   // Hands: a card may be swapped in this fight   // a card may be bought in this fight (CONFIG.fight.buy): its price and how many more
   return F;
 }
 // what the enemy has, as a sum
 function enemyWords(F) {
   const It = F.boss ? 'He' : 'It';
-  if (F.stage === 'meet') return 'Starts at ' + F.start + (F.spec.die ? ' plus a die roll' : '') + ', then flips ' + nCards(F.k, 'face-down card') + (F.k > 1 ? ' one at a time' : '') + '; ' + (F.k > 1 ? 'each adds' : 'it adds') + ' its number.';
-  const sum = (F.start || !F.boss ? [F.start + ' to start'] : []).concat(F.die ? [F.die + ' on its die'] : [], F.turned.length ? [ranksText(F.turned) + ' flipped'] : []).join(' + ');
+  if (F.stage === 'meet') return 'Starts at ' + F.start + (F.spec.die ? ' plus a die roll' : '') + ', then flips ' + nCards(F.k, 'face-down card') + (F.k > 1 ? ' one at a time' : '') + '; ' + (F.k > 1 ? 'each adds' : 'it adds') + ' its number.' + (F.hf && F.k > 1 ? ' Cards of its that match (a pair, one suit) count extra.' : '');
+  const sum = (F.start || !F.boss ? [F.start + ' to start'] : []).concat(F.die ? [F.die + ' on its die'] : [], F.turned.length ? [ranksText(F.turned) + ' flipped'] : [], F.foeMatch && F.foeMatch.kind ? [F.foeMatch.extra + ' for ' + D.handName(F.foeMatch)] : []).join(' + ');
   return It + ' has ' + F.its + (sum ? ' (' + sum + ')' : '') + '. ' + (F.stage === 'again' ? 'Its cards are face up now: nothing more will flip.' : F.left ? It + ' still flips ' + nCards(F.left, 'more card') + '.' : It + ' has flipped all ' + (F.boss ? 'his' : 'its') + ' cards.');
 }
 // what you have, as a sum
@@ -4135,26 +4398,31 @@ function youWords(F) {
   const extra = [[F.dark, 'the dark'], [F.bonus, 'a bonus']].filter(q => q[0]);
   if (F.stage !== 'add') return extra.length ? 'You bring ' + F.mine + ': strength ' + F.strength + extra.map(q => ', ' + q[1] + ' ' + sgn(q[0])).join('') + '.' : 'Your strength is ' + F.mine + '.';
   if (!extra.length && !F.played.length) return 'You have ' + F.mine + ' (your strength).';
-  return 'You have ' + F.mine + ': ' + ['strength ' + F.strength].concat(extra.map(q => q[1] + ' ' + sgn(q[0])), F.played.length ? ['played ' + ranksText(F.played)] : []).join(', ') + '.';
+  return 'You have ' + F.mine + ': ' + ['strength ' + F.strength].concat(extra.map(q => q[1] + ' ' + sgn(q[0])), F.played.length ? ['played ' + ranksText(F.played) + (F.youMatch && F.youMatch.kind ? ', ' + F.youMatch.extra + ' more for ' + D.handName(F.youMatch) : '')] : []).join(', ') + '.';
 }
 // the sentence that says where you stand and what to do now
 function fightLead(F, opts) {
   const reach = (opts || []).some(o => o.cards);   // a way to be level with your hand
+  if ((opts || []).some(o => o.act === 'swapDrop')) return 'Choose the hand card to swap out: it goes to the discards and you draw the top number card' + (F.hy && F.hy.swap ? ' (' + F.hy.swap.price + ' Energy)' : '') + '. Or keep your hand: nothing is paid.';   // Hands
   if (F.stage === 'meet') return F.short > 0 ? (F.boss ? 'He' : 'It') + ' starts at ' + F.start + ' and you have ' + F.mine + ', so you must play hand cards worth at least ' + F.short + ' to begin, before it flips anything.' : 'You have as much as its start (' + F.start + '): you play nothing until a flip puts it above you.';
   if (F.stage === 'again') return F.short > 0 ? 'It has ' + F.its + ' and you have ' + F.mine + ', so you need ' + F.short + ' more (being level is enough).' + (reach ? ' Play hand cards worth at least ' + F.short + ',' : ' Your hand cannot reach it;') + (F.canPass ? ' pay ' + F.pass + ' Energy to slip past it,' : '') + ' or walk round it.' : 'Your ' + F.mine + ' already beats it.';
   const lose = ', or stop: you lose ' + (F.boss ? 'the round' : 'the fight') + ' and take ' + F.blows + ' damage.';
-  return 'You are ' + F.short + ' short. ' + (reach ? 'Play hand cards worth at least ' + F.short + (F.boss ? ' to win the round' : F.left ? ' to catch up (then it flips ' + (F.left > 1 ? 'its next card' : 'its last card') + ', and may be above you again)' : ' to be level and win') + lose : 'Your hand cannot reach it, so ' + (F.buy ? 'buy a card (' + F.buy.price + ' Energy) or stop' : 'you can only stop') + lose.slice(lose.indexOf(':')));
+  return 'You are ' + F.short + ' short. ' + (reach ? 'Play hand cards worth at least ' + F.short + (F.boss ? ' to win the round' : F.left ? ' to catch up (then it flips ' + (F.left > 1 ? 'its next card' : 'its last card') + ', and may be above you again)' : ' to be level and win') + lose : 'Your hand cannot reach it, so ' + (F.buy || F.swap ? [F.buy ? 'buy a card (' + F.buy.price + ' Energy)' : '', F.swap ? 'swap a card (' + F.swap.price + ' Energy)' : ''].filter(Boolean).join(', ') + ' or stop' : 'you can only stop') + lose.slice(lose.indexOf(':')));
 }
 // the line under a button: what it does and what happens next
+const lootPick = F => { const n = F.hy ? Math.max(Math.round(F.spec.loot || 0), F.hy.loot || 0) : 0; return n ? 'lets you take ' + (n > 1 ? n + ' of its cards' : 'one of its cards') + ' and ' : ''; };   // Hands: a win lets you pick from its flipped cards first
 function fightCaption(F, o) {   // the line under a button: what it does and what happens next
   const Obj = F.boss ? 'him' : 'it', lost = F.played.length ? ' and lose the ' + (F.played.length === 1 ? 'card' : F.played.length + ' cards') + ' you played (a loss draws nothing back)' : '';
   switch (o.act) {
-    case 'fight': return 'Start the fight' + (F.spec.die ? '.' : F.short > 0 ? ': you play hand cards first.' : ': it flips its first card.') + ' A win draws your hand back up to ' + F.hand + '.';
+    case 'fight': return 'Start the fight' + (F.spec.die ? '.' : F.short > 0 ? ': you play hand cards first.' : ': it flips its first card.') + ' A win ' + lootPick(F) + 'draws your hand back up to ' + F.hand + '.';
     case 'pass': return 'Pay ' + F.pass + ' Energy to slip past it: no fight and no damage. You walk on' + (F.e.keeper ? ', through the hole' : ', onto its square') + '.';
-    case 'add': { const sum = rankSum(o.cards), after = F.mine + sum, over = after - F.its; return 'You would have ' + after + ': ' + (over ? over + ' above ' + Obj : 'level') + (F.boss ? ', so you win the round.' : F.left ? '.' : ', and it has no cards left: you win.'); }
+    case 'add': { const after = F.hy ? F.base + D.handScore(F.hy, F.played.concat(o.cards)) : F.mine + rankSum(o.cards), over = after - F.its; return 'You would have ' + after + (F.hy ? D.handNote(F.hy, F.played.concat(o.cards)) : '') + ': ' + (over ? over + ' above ' + Obj : 'level') + (F.boss ? ', so you win the round.' : F.left ? '.' : ', and it has no cards left: you win.'); }
     case 'buy': return 'Pay ' + D.CONFIG.fight.buy.price + ' Energy and the top number card of the pile goes into your hand, to play at once or keep.' + (F.buy ? (F.buy.left > 1 ? ' You may buy ' + (F.buy.left - 1) + ' more after this one in this fight.' : ' It is the last you may buy in this fight.') : '');
     case 'stop': return F.boss ? 'Lose the round: take ' + F.blows + ' damage' + lost + '.' : 'Stop and lose this fight: take ' + F.blows + ' damage' + lost + (F.left > 0 ? '. All its hidden cards are turned over, so you see its total' : '') + '. Then you can fight it again with cards that beat it, pay ' + F.pass + ' Energy, or walk round it.';
-    case 'cover': return 'You would have ' + (F.base + rankSum(o.cards)) + ' against its ' + F.its + ': you win and step onto its square.';
+    case 'cover': return 'You would have ' + (F.base + (F.hy ? D.handScore(F.hy, o.cards) : rankSum(o.cards))) + (F.hy ? D.handNote(F.hy, o.cards) : '') + ' against its ' + F.its + ': you win' + (lootPick(F) ? ', ' + lootPick(F).replace(/ and $/, '') + ',' : '') + ' and step onto its square.';
+    case 'swap': return 'Pay ' + F.swap.price + ' Energy, then drop a hand card of your choice and draw the top number card' + (F.swap.left > 1 ? '. You may swap ' + (F.swap.left - 1) + ' more after this one in this fight.' : '. It is the last swap you may make in this fight.');
+    case 'swapDrop': return 'Pay ' + (F.hy && F.hy.swap ? F.hy.swap.price : '') + ' Energy: this card goes to the discards and you draw the top number card of the pile.';
+    case 'swapNo': return 'Change nothing: no Energy is paid.';
     case 'leave': return 'Walk round it instead: it stays where it is, and you lose no Energy or Health.';
   }
   return '';
@@ -4165,16 +4433,19 @@ function foeTitle(F) {   // the enemy in words (its card is drawn beside it), an
   return F.stage === 'meet' ? capital(who) + ' blocks your way' : F.stage === 'again' ? capital(who) + ': its total is known' : 'Fighting ' + who;
 }
 function handNote(p) {   // what the cards of your hand do while the fight asks for them: a card that is a whole answer alone is bright, the others are dim (the buttons below play them together)
-  const solo = p.options.filter(o => o.cards && o.cards.length === 1), pairs = p.options.filter(o => o.cards && o.cards.length > 1), dim = G.hand.filter(c => !solo.some(o => o.cards[0].rank === c.rank));
+  const eqc = (a, b) => D.handsApply(G, 'you') ? same(a, b) : a.rank === b.rank;
+  const solo = p.options.filter(o => o.cards && o.cards.length === 1), pairs = p.options.filter(o => o.cards && o.cards.length > 1), dim = G.hand.filter(c => !solo.some(o => eqc(o.cards[0], c)));
   if (!solo.length) return pairs.length ? 'No single card reaches it: a button plays two or more together.' : '';
-  return 'Tap a bright card to play it, the same as its button.' + (!dim.length ? '' : dim.some(c => pairs.some(o => o.cards.some(x => x.rank === c.rank))) ? ' A dim card cannot reach it alone: a button plays it together with another.' : ' A dim card is not part of any way to reach it here.');
+  return 'Tap a bright card to play it, the same as its button.' + (!dim.length ? '' : dim.some(c => pairs.some(o => o.cards.some(x => eqc(x, c)))) ? ' A dim card cannot reach it alone: a button plays it together with another.' : ' A dim card is not part of any way to reach it here.');
 }
-function eqRow(who, start, cards, backs, total, tcls, startTitle) {   // one side of the fight as a sum: the number it begins with, the cards added to it, and the total
+const matchTag = m => m.kind === 'number' ? (m.n === 2 ? 'pair' : m.n === 3 ? 'three' : 'four') : m.kind === 'suit' ? 'suit' : m.kind === 'run' ? 'run' : m.kind === 'parity' ? (m.cards[0].rank % 2 ? 'odd' : 'even') : 'colour';
+function eqRow(who, start, cards, backs, total, tcls, startTitle, match) {   // one side of the fight as a sum: the number it begins with, the cards added to it, and the total
   const r = document.createElement('div'); r.className = 'frow eq';
   const w = document.createElement('span'); w.className = 'who'; w.textContent = who; r.appendChild(w);
   const b = document.createElement('span'); b.className = 'badge'; b.textContent = start; if (startTitle) b.title = startTitle; r.appendChild(b);
   const op = t => { const o = document.createElement('span'); o.className = 'op'; o.setAttribute('aria-hidden', 'true'); o.textContent = t; r.appendChild(o); };
   for (const c of cards) { op('+'); r.appendChild(pcard(c, 'sm')); }
+  if (match && match.kind && match.extra > 0) { op('+'); const m = document.createElement('span'); m.className = 'badge bonus'; m.textContent = match.extra + ' ' + matchTag(match); m.title = D.handName(match) + ': ' + match.extra + ' more'; r.appendChild(m); }   // Hands: what the match adds
   for (let i = 0; i < (backs || 0); i++) { op('+'); r.appendChild(pcard(null, 'sm')); }
   op('='); const t = document.createElement('span'); t.className = 'total ' + (tcls || ''); t.textContent = total; r.appendChild(t);
   return r;
@@ -4187,9 +4458,9 @@ function fightPanel(p, F) {
   if (!F.boss) (e.kind === 'elite' ? e.cards : [e.card]).forEach(cc => h.appendChild(pcard(cc, 'sm')));
   h.appendChild(document.createTextNode(F.boss ? e.name + ': ' + F.wins + ' of ' + F.hits + ' rounds won' : foeTitle(F))); box.appendChild(h);
   const meet = F.stage === 'meet';
-  box.appendChild(eqRow(F.boss ? e.name : 'Enemy', F.start + (meet && F.spec.die ? ' + die' : F.die ? ' + ' + F.die : ''), F.turned, F.left, F.its, meet ? '' : F.short > 0 ? 'lose' : '', 'the number it starts at'));
+  box.appendChild(eqRow(F.boss ? e.name : 'Enemy', F.start + (meet && F.spec.die ? ' + die' : F.die ? ' + ' + F.die : ''), F.turned, F.left, F.its, meet ? '' : F.short > 0 ? 'lose' : '', 'the number it starts at', F.foeMatch));
   box.appendChild(para(enemyWords(F), 'fsum'));
-  box.appendChild(eqRow('You', F.base, F.played, 0, F.mine, meet ? '' : F.short <= 0 ? 'ok' : '', 'what you bring before any card: your strength and what adds to it'));
+  box.appendChild(eqRow('You', F.base, F.played, 0, F.mine, meet ? '' : F.short <= 0 ? 'ok' : '', 'what you bring before any card: your strength and what adds to it', F.youMatch));
   box.appendChild(para(youWords(F), 'fsum'));
   box.appendChild(para(fightLead(F, p.options), 'fnote lead'));
   if (meet) {   // what else the fight costs or does: steps taken from the allowance, a keeper on the hole, no Energy to pay
@@ -4247,6 +4518,25 @@ function fightCardLead() {
   const C = D.CONFIG, F = C.fight, c1 = D.book().pages[D.circleKey(1)].dials.base, c9 = D.book().pages[D.circleKey(C.circles)].dials.base, damage = [...new Set([F.blows.J, F.blows.Q, F.blows.K])].sort((a, b) => a - b);
   return 'An enemy is a number that grows. It starts at its page’s number (' + c1 + ' on the first circle, ' + c9 + ' on the last) and flips face-down number cards one at a time: a jack flips ' + nCards(F.cards.J) + ', a queen ' + F.cards.Q + ', a king ' + F.cards.K + '. Each card adds its number to the enemy. Your number is your strength plus the hand cards you play. Whenever the enemy is above you, play hand cards until you are level with it, or stop: you lose the fight, take its damage (' + damage.join(' or ') + ') and the cards you played are gone. If you are level after its last card you win, and your hand fills back up to ' + C.start.hand + '. Before the fight starts, or again after a loss, you may pay ' + D.passCost(null) + ' Energy to slip past it: no fight, and you walk on.';
 }
+// Hands (experimental) on the rules card and the start screen: from the settings, and nothing else
+function fillHandsCard() {
+  const h = $('#card-hands-h'), p = $('#card-hands'), H = G && G.hands; if (!h || !p) return;
+  h.hidden = p.hidden = !H; if (!H) return;
+  const you = H.sides !== 'foes', sw = you && H.swap ? ' In a fight you may swap a card: pay ' + H.swap.price + ' Energy, drop a hand card of your choice and draw the top number card, up to ' + H.swap.max + ' a fight.' : '';
+  p.textContent = 'This run plays Hands from circle ' + H.from + ': ' + D.handsRules(H) + '. It scores the number cards a side shows in one fight: the cards you play, and the face-down cards an enemy flips.' + (you && H.loot ? ' After a win you take ' + (H.loot === 1 ? 'one' : H.loot) + ' of the cards it flipped into your hand, your choice (an elite gives its own number).' : '') + (you ? ' When a card would take your hand over its size, you choose which card goes.' : '') + sw;
+}
+const handsAddress = () => { try { return (typeof location !== 'undefined' && location.hash || '') + (typeof location !== 'undefined' && location.search || ''); } catch (e) { return ''; } };
+const handsFlag = () => /(^|[#?&])hands\b/.test(handsAddress());   // the page address ends in #hands
+const handsFrom = () => { const m = /(^|[#?&])hands=(\d+)/.exec(handsAddress()); return m ? Math.max(1, Math.min(D.CONFIG.circles || 9, +m[2])) : null; };   // #hands=1: Hands count from circle 1, to see a match at once
+function fillHandsStart() { const row = $('#hands-row'); if (row) row.hidden = !handsFlag(); const t = $('#hands-text'); if (t && D.CONFIG.hands) t.textContent = 'Hands (experimental): matching number cards count extra, for you and for the enemies, from circle ' + (handsFrom() || D.CONFIG.hands.from) + ' (the Rules card says how). It is a practice run: nothing is written in the Ledger.'; }
+// Exit keepers (experimental) on the rules card and the start screen: from the settings, and nothing else (#keepers in the page address shows the start-screen box, as #hands does for Hands)
+function fillKeepersCard() {
+  const h = $('#card-keepers-h'), p = $('#card-keepers'), K = G && G.keepers; if (!h || !p) return;
+  h.hidden = p.hidden = !K; if (!K) return;
+  p.textContent = 'This run plays the exit keepers. ' + D.keepersRules(K) + ' Each page header shows its own allowance, and a keeper is tagged “' + KEEP + '” on the page.';
+}
+const keepersFlag = () => /(^|[#?&])keepers\b/.test(handsAddress());   // the page address has #keepers
+function fillKeepersStart() { const row = $('#keepers-row'); if (row) row.hidden = !keepersFlag(); const t = $('#keepers-text'); if (t && D.CONFIG.keepers) t.textContent = 'Exit keepers (experimental): ' + D.keepersRules(D.keepersSettings(true)) + ' It is a practice run: nothing is written in the Ledger.'; }
 function fillFightCard() {
   const lead = $('#card-fight-lead'), list = $('#card-fight-example'); if (!lead || !list) return;
   lead.textContent = fightCardLead(); list.innerHTML = '';
@@ -4586,7 +4876,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const ll = $('#licence-link'); if (ll) ll.addEventListener('click', () => { const d = $('#licence'); if (d) d.open = true; });   // the notice's link opens the licence text under it
   const co = $('#card-offers'); if (co) D.CONFIG.carry.table.forEach((id, i) => { const tr = document.createElement('tr'); tr.innerHTML = '<td></td><td><b></b> <span></span></td>'; tr.children[0].textContent = i + 1; tr.querySelector('b').textContent = D.CONFIG.carry.offers[id].name + ':'; tr.querySelector('span').textContent = D.CONFIG.carry.offers[id].text; co.appendChild(tr); });
   const cx = $('#card-boxes'); if (cx) for (const x of D.CONFIG.carry.boxes) { const li = document.createElement('li'); li.textContent = '☐ ' + x.text + (x.opens ? ' (opens ' + D.CONFIG.builds[x.opens].name + ')' : '') + (x.opensEntry ? ' (opens ' + ENTRY_TEXT[x.opensEntry][0] + ')' : ''); cx.appendChild(li); }
-  fillFightCard(); fillHowto();
+  fillFightCard(); fillHowto(); fillHandsStart(); fillKeepersStart();
   cardSymbols();
   renderLedger();
   let saved = loadRun(), resumed = null; if (saved) { try { resumed = replayRun(saved); } catch (e) { resumed = null; } }
@@ -4596,7 +4886,7 @@ window.addEventListener('DOMContentLoaded', () => {
     render(); renderLedger();
   } else { if (saved) clearRun(); openStart(); }   // a first run starts at once; a Ledger with a gift waiting, or a second build card or way to play open, shows the choice first
 });
-window.CommediaUI = { wayFacts, wayWords, clockWords, howtoItems, fightFacts, enemyWords, youWords, fightLead, fightCaption, fightExample, fightCardLead, examAdviceText, examNow, examTally, examLabel, examShort, examHint, examNews, fightCost, keeperNote, keeperNews, guardsHole, KEEP, heatRules };   // the pure text the tests call (the exam's lines, the Heat paragraph); no DOM needed
+window.CommediaUI = { handsFlag, handsFrom, keepersFlag, wayFacts, wayWords, clockWords, howtoItems, fightFacts, enemyWords, youWords, fightLead, fightCaption, fightExample, fightCardLead, examAdviceText, examNow, examTally, examLabel, examShort, examHint, examNews, fightCost, keeperNote, keeperNews, guardsHole, KEEP, heatRules };   // the pure text the tests call (the exam's lines, the Heat paragraph); no DOM needed
 })();
 
 </script>
